@@ -1,6 +1,6 @@
 <?php
 
-namespace VendorName\Skeleton\Database\Factories;
+namespace Optimacloud\Filament2fa\Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
 
