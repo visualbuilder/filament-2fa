@@ -2,6 +2,7 @@
 
 namespace Optimacloud\Filament2fa\Filament\Pages;
 
+use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Group;
@@ -61,7 +62,7 @@ class Profile extends EditProfile
         ];
     }
 
-    protected function getTwoFactorAuthFormComponent(): Section
+    protected function getTwoFactorAuthFormComponent(): Component
     {
         return Section::make('Two Factor Authentication')
             ->description('Additional security to your account using two  factor authentication')
@@ -82,7 +83,7 @@ class Profile extends EditProfile
         ];
     }
 
-    protected function enable2FactorAuthGroupComponent(): Group
+    protected function enable2FactorAuthGroupComponent(): Component
     {
         return Group::make()
             ->schema([
@@ -102,7 +103,7 @@ class Profile extends EditProfile
             ])->visible(!$this->getUser()->hasTwoFactorEnabled());
     }
 
-    protected function disable2FactorAuthGroupComponent(): Group
+    protected function disable2FactorAuthGroupComponent(): Component
     {
         return Group::make()
             ->schema([
