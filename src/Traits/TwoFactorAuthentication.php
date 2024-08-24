@@ -12,6 +12,11 @@ trait TwoFactorAuthentication
 {
     use BaseTwoFactorAuthentication;
 
+    public static function isTwoFactorMandatory(): bool
+    {
+        return true;
+    }
+
     public function hasTwoFactor(): MorphOne
     {
         return $this->morphOne(BaseModelTwoFactorAuthentication::class, 'authenticatable');

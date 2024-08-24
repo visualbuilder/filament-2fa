@@ -65,7 +65,7 @@ class Profile extends EditProfile
     protected function getTwoFactorAuthFormComponent(): Component
     {
         return Section::make('Two Factor Authentication')
-            ->description('Additional security to your account using two  factor authentication')
+            ->description('Additional security for your account using two  factor authentication')
             ->relationship('twoFactorAuth')
             ->schema([
                 $this->enable2FactorAuthGroupComponent(),

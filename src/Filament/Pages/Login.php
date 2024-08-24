@@ -83,7 +83,7 @@ class Login extends BaseLogin
         return
             Group::make([
                 TextInput::make('2fa_code')
-                    ->label('TOTP Code')
+                    ->label('One Time Pin')
                     ->required()
                     ->numeric()
                     ->minLength(6)

@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
-use Visualbuilder\EmailTemplates\Commands\InstallCommand;
 
 
 class Filament2faServiceProvider extends PackageServiceProvider
@@ -19,7 +18,7 @@ class Filament2faServiceProvider extends PackageServiceProvider
             ->hasViews('filament-2fa')
             ->runsMigrations()
             ->hasCommands([
-                InstallCommand::class,
+//                InstallCommand::class,
             ]);
     }
 
