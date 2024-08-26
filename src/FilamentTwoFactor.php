@@ -3,6 +3,7 @@
 namespace Optimacloud\Filament2fa;
 
 use Closure;
+use Illuminate\Auth\Events\Authenticated;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Config\Repository;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class FilamentTwoFactor extends TwoFactor
      * If the user does not use TOTP, no checks will be done.
      */
     public function validate(Authenticatable $user): bool
-    {   
+    {
         // If the user does not use 2FA or is not enabled, don't check.
         if (! $user instanceof TwoFactorAuthenticatable || ! $user->hasTwoFactorEnabled()) {
             return true;
@@ -57,6 +58,19 @@ class FilamentTwoFactor extends TwoFactor
 
         return false;
     }
+
+    
+    public function checkSafeDeviceLogin(Authenticatable $user)
+    {
+        // If safe devices are enabled, and this is a safe device, bypass.
+        if ($this->isSafeDevicesEnabled() && $user->isSafeDevice($this->request)) {
+            $user->setTwoFactorBypassedBySafeDevice(true);
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 
     /**
      * Checks if the Request has a Two-Factor Code and is valid.

@@ -13,6 +13,7 @@ use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Models\Contracts\FilamentUser;
 use Optimacloud\Filament2fa\FilamentTwoFactor;
 use Illuminate\Validation\ValidationException;
+use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
 
 class Login extends BaseLogin
 {
@@ -33,10 +34,10 @@ class Login extends BaseLogin
         }
         $user = Filament::auth()->user();
 
-        if (!app(FilamentTwoFactor::class, ['input' => '2fa_code', 'code' => $data['2fa_code'], 'safeDeviceInput' => $data['safe_device_enable']])->validate($user)) {
-            Filament::auth()->logout();
-            $this->throwTotpcodeValidationException();
-        }
+        // if (!app(FilamentTwoFactor::class, ['input' => '2fa_code', 'code' => $data['2fa_code'], 'safeDeviceInput' => $data['safe_device_enable']])->validate($user)) {
+        //     Filament::auth()->logout();
+        //     $this->throwTotpcodeValidationException();
+        // }
 
         if (
             ($user instanceof FilamentUser) &&
@@ -70,8 +71,8 @@ class Login extends BaseLogin
                     ->schema([
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent(),
-                        $this->get2FaFormComponent(),
-                        $this->getRememberFormComponent(),
+                        // $this->get2FaFormComponent(),
+                        $this->getRememberFormComponent(), 
                     ])
                     ->statePath('data'),
             ),

@@ -50,6 +50,11 @@ class Configure extends EditProfile
         return 'filament-panels::components.layout.simple';
     }
 
+    public function getView(): string
+    {
+        return static::$view ?? 'filament-panels::pages.auth.edit-profile';
+    }
+
     public function hasLogo(): bool
     {
         return true;

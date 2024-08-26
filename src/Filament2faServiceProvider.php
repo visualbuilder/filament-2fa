@@ -16,6 +16,7 @@ class Filament2faServiceProvider extends PackageServiceProvider
         $package->name("filament-2fa")
             ->hasConfigFile(['filament-2fa'])
             ->hasViews('filament-2fa')
+            ->hasRoute('web')
             ->runsMigrations()
             ->hasCommands([
 //                InstallCommand::class,

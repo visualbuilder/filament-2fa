@@ -13,7 +13,7 @@ class RedirectIfTwoFactorNotActivated
         $user = $request->user();
 
         if (! $user instanceof TwoFactor
-            || $user->hasTwoFactorEnabled()
+            || !$user->hasTwoFactorEnabled()
             || $request->routeIs(config('filament-2fa.excluded_routes', []))
         ) {
             return $next($request);
