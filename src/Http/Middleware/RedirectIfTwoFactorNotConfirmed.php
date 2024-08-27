@@ -14,8 +14,9 @@ class RedirectIfTwoFactorNotConfirmed
 
         if (!$user instanceof TwoFactor || !$user->hasTwoFactorEnabled() || config('two-factor.safe_devices.enabled', false) === false) {
             return $next($request);
-        }
+        }                
 
+        dd($user->isSafeDevice($request), $request->session()->pull('verified_without_safe_device'));        
         if (
             $user instanceof TwoFactor
             && $user->hasTwoFactorEnabled()
@@ -26,6 +27,7 @@ class RedirectIfTwoFactorNotConfirmed
             return $next($request);
         }
 
+        // $request->session()->pull('verified_without_safe_device')
 
         return $request->expectsJson()
             ? response()->json(['message' => trans('two-factor::messages.enable')], 403)

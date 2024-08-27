@@ -75,7 +75,7 @@ class FilamentTwoFactor extends TwoFactor
     {
         // If the code is valid, return true only after we try to save the safe device.
         if ($this->requestHasCode() && $user->validateTwoFactorCode($this->getCode())) {
-            if ($this->isSafeDevicesEnabled() && $this->wantsToAddDevice()) { //Todo: $this->wantsToAddDevice() method needs to be altered
+            if ($this->isSafeDevicesEnabled() && $this->wantsToAddDevice()) {
                 $user->addSafeDevice($this->request);
             }
 

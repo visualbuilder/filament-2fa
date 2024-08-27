@@ -4,10 +4,10 @@ namespace Optimacloud\Filament2fa\Livewire;
 
 use Exception;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
@@ -64,7 +64,13 @@ class Confirm2Fa extends SimplePage implements HasForms
                     ->minLength(6)
                     ->maxLength(6)
                     ->autocomplete(false),
-                Checkbox::make('safe_device_enable')
+                Toggle::make('safe_device_enable')
+                    ->label('Enable safe device')
+                    ->inline(false)
+                    ->onColor('success')
+                    ->offColor('danger')
+                    ->onIcon('heroicon-m-check-circle')
+                    ->offIcon('heroicon-m-x-mark'),
             ]);
     }
 
@@ -79,7 +85,9 @@ class Confirm2Fa extends SimplePage implements HasForms
                 ->icon('heroicon-o-check-circle')
                 ->color('success')
                 ->send();
-
+            if(!$formData['safe_device_enable']) {
+                request()->session()->put('verified_without_safe_device', time());
+            }            
             $this->redirect(Filament::getUrl());
         } else {
             $this->throwTotpcodeValidationException();
