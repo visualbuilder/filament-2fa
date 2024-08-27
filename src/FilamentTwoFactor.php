@@ -41,7 +41,7 @@ class FilamentTwoFactor extends TwoFactor
         }
 
         // If safe devices are enabled, and this is a safe device, bypass.
-        if ($this->isSafeDevicesEnabled() && $user->isSafeDevice($this->request)) { //Todo: $user->isSafeDevice($this->request)  method needs to be altered
+        if ($this->isSafeDevicesEnabled() && $user->isSafeDevice($this->request)) {
             $user->setTwoFactorBypassedBySafeDevice(true);
 
             return true;
@@ -49,8 +49,8 @@ class FilamentTwoFactor extends TwoFactor
 
         // If the code is valid, return true only after we try to save the safe device.
         if ($this->requestHasCode() && $user->validateTwoFactorCode($this->getCode())) {
-            if ($this->isSafeDevicesEnabled() && $this->wantsToAddDevice()) { //Todo: $this->wantsToAddDevice() method needs to be altered
-                $user->addSafeDevice($this->request);  //Todo: $user->addSafeDevice($this->request); method needs to be altered
+            if ($this->isSafeDevicesEnabled() && $this->wantsToAddDevice()) {
+                $user->addSafeDevice($this->request);
             }
 
             return true;
@@ -68,6 +68,18 @@ class FilamentTwoFactor extends TwoFactor
             return true;
         } else {
             return false;
+        }
+    }
+
+    public function confirm2Fa(Authenticatable $user)
+    {
+        // If the code is valid, return true only after we try to save the safe device.
+        if ($this->requestHasCode() && $user->validateTwoFactorCode($this->getCode())) {
+            if ($this->isSafeDevicesEnabled() && $this->wantsToAddDevice()) { //Todo: $this->wantsToAddDevice() method needs to be altered
+                $user->addSafeDevice($this->request);
+            }
+
+            return true;
         }
     }
 
@@ -95,6 +107,6 @@ class FilamentTwoFactor extends TwoFactor
      */
     protected function wantsToAddDevice(): bool
     {
-        return $this->request->filled($this->safeDeviceInput);
+        return (bool)$this->safeDeviceInput;
     }
 }

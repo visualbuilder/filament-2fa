@@ -5,7 +5,7 @@ namespace Optimacloud\Filament2fa;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Optimacloud\Filament2fa\Filament\Pages\Configure;
-
+use Optimacloud\Filament2fa\Livewire\Confirm2Fa;
 
 class TwoFactorPlugin implements Plugin
 {
@@ -47,6 +47,9 @@ class TwoFactorPlugin implements Plugin
             Configure::class
         ]);
 
+        $panel->widgets([
+            Confirm2Fa::class
+        ]);
     }
 
     public function boot(Panel $panel): void
