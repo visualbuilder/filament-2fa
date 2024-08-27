@@ -16,7 +16,6 @@ class RedirectIfTwoFactorNotConfirmed
             return $next($request);
         }                
 
-        dd($user->isSafeDevice($request), $request->session()->pull('verified_without_safe_device'));        
         if (
             $user instanceof TwoFactor
             && $user->hasTwoFactorEnabled()
