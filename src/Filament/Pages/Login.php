@@ -9,6 +9,8 @@ use Filament\Pages\Auth\Login as BaseLogin;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
+use Filament\Forms\Get;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Models\Contracts\FilamentUser;
 use Optimacloud\Filament2fa\FilamentTwoFactor;
@@ -28,16 +30,30 @@ class Login extends BaseLogin
         }
 
         $data = $this->form->getState();
+        
+        if (isset($data['login_with_recovery_code']) && $data['login_with_recovery_code']) {
+            /** Login with 2FA Recovery code */
+            $user = $this->getAuthModel()::whereEmail($data['email'])->first();            
+            if (!app(FilamentTwoFactor::class, ['input' => 'code', 'code' => $data['code'], 'safeDeviceInput' => true])->loginWithRecoveryCode($user)) {                
+                $this->throwCodeValidationException('code');
+            }
+            Filament::auth()->login($user, $data['remember']);
 
-        if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
-            $this->throwFailureValidationException();
+        } else {
+            if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
+                $this->throwFailureValidationException();
+            }
         }
+
         $user = Filament::auth()->user();
 
-        // if (!app(FilamentTwoFactor::class, ['input' => '2fa_code', 'code' => $data['2fa_code'], 'safeDeviceInput' => $data['safe_device_enable']])->validate($user)) {
-        //     Filament::auth()->logout();
-        //     $this->throwTotpcodeValidationException();
-        // }
+        /** Verify 2FA code on login page */
+        if (isset($data['2fa_code']) && $data['2fa_code']) {
+            if (!app(FilamentTwoFactor::class, ['input' => '2fa_code', 'code' => $data['2fa_code'], 'safeDeviceInput' => $data['safe_device_enable']])->validate($user)) {
+                Filament::auth()->logout();
+                $this->throwCodeValidationException('2fa_code');
+            }
+        }
 
         if (
             ($user instanceof FilamentUser) &&
@@ -53,10 +69,10 @@ class Login extends BaseLogin
         return app(LoginResponse::class);
     }
 
-    protected function throwTotpcodeValidationException(): never
+    protected function throwCodeValidationException($fieldName): never
     {
         throw ValidationException::withMessages([
-            'data.2fa_code' => 'TOTP code expired or invalid',
+            "data.$fieldName" => 'TOTP code expired or invalid',
         ]);
     }
 
@@ -70,9 +86,11 @@ class Login extends BaseLogin
                 $this->makeForm()
                     ->schema([
                         $this->getEmailFormComponent(),
-                        $this->getPasswordFormComponent(),
+                        $this->getPasswordFormComponent()
+                            ->visible(fn(Get $get) => !$get('login_with_recovery_code')),
                         // $this->get2FaFormComponent(),
-                        $this->getRememberFormComponent(), 
+                        $this->getRecoveryCodeFormComponent(),
+                        $this->getRememberFormComponent(),
                     ])
                     ->statePath('data'),
             ),
@@ -92,5 +110,26 @@ class Login extends BaseLogin
                     ->autocomplete(false),
                 Checkbox::make('safe_device_enable')
             ]);
+    }
+
+    protected function getRecoveryCodeFormComponent(): Component
+    {
+        return
+            Group::make([
+                Toggle::make('login_with_recovery_code')
+                    ->live(),
+                TextInput::make('code')
+                    ->label('Recovery Code')
+                    ->required()
+                    ->autocomplete(false)
+                    ->visible(fn(Get $get) => $get('login_with_recovery_code'))
+            ]);
+    }
+
+    protected function getAuthModel()
+    {
+        $provider = config('auth.guards.'.Filament::getAuthGuard())['provider'];
+        $modelName = config("auth.providers.$provider.model");
+        return $modelName;
     }
 }

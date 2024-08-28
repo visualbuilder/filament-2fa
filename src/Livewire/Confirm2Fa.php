@@ -78,7 +78,7 @@ class Confirm2Fa extends SimplePage implements HasForms
     {
         $formData = $this->form->getState();
 
-        if (app(FilamentTwoFactor::class, ['input' => 'totp_code', 'code' => $formData['totp_code'], 'safeDeviceInput' => $formData['safe_device_enable'] ?: false])->confirm2Fa($this->getUser())) {
+        if (app(FilamentTwoFactor::class, ['input' => 'totp_code', 'code' => $formData['totp_code'], 'safeDeviceInput' => $formData['safe_device_enable'] ?: false])->validate2Fa($this->getUser())) {
             Notification::make()
                 ->title('Success')
                 ->body('Your 2FA has been verified.')
