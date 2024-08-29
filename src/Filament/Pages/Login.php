@@ -73,7 +73,7 @@ class Login extends BaseLogin
     protected function throwRecoveryCodeValidationException($fieldName): never
     {
         throw ValidationException::withMessages([
-            "data.$fieldName" => 'The recovery code is invalid, expired, or has already been used.',
+            "data.$fieldName" => __('filament-2fa::two-factor.recovery_code.error_message')
         ]);
     }
 
@@ -102,9 +102,10 @@ class Login extends BaseLogin
         return
             Group::make([
                 Toggle::make('login_with_recovery_code')
+                    ->label(__('filament-2fa::two-factor.recovery_code.toggle_recovery_login'))
                     ->live(),
                 TextInput::make('code')
-                    ->label('Recovery Code')
+                    ->label(__('filament-2fa::two-factor.recovery_code.recovery_code'))
                     ->required()
                     ->autocomplete(false)
                     ->visible(fn(Get $get) => $get('login_with_recovery_code'))

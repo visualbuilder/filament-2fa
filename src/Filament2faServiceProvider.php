@@ -36,6 +36,8 @@ class Filament2faServiceProvider extends PackageServiceProvider
             $this->publishMigrations();
             $this->publishConfigs();
         }
+
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'filament-2fa');
     }
 
     protected function publishMigrations()

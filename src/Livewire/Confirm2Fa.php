@@ -63,14 +63,14 @@ class Confirm2Fa extends SimplePage implements HasForms
         return
             Group::make([
                 TextInput::make('totp_code')
-                    ->label('One Time Pin')
+                    ->label(__('filament-2fa::two-factor.one_time_pin'))
                     ->required()
                     ->numeric()
                     ->minLength(6)
                     ->maxLength(6)
                     ->autocomplete(false),
                 Toggle::make('safe_device_enable')
-                    ->label('Enable safe device')
+                    ->label(__('filament-2fa::two-factor.enable_safe_device'))
                     ->inline(false)
                     ->onColor('success')
                     ->offColor('danger')
@@ -86,7 +86,7 @@ class Confirm2Fa extends SimplePage implements HasForms
         if (app(FilamentTwoFactor::class, ['input' => 'totp_code', 'code' => $formData['totp_code'], 'safeDeviceInput' => $formData['safe_device_enable'] ?: false])->validate2Fa($this->getUser())) {
             Notification::make()
                 ->title('Success')
-                ->body('Your 2FA has been verified.')
+                ->body(__('filament-2fa::two-factor.success'))
                 ->icon('heroicon-o-check-circle')
                 ->color('success')
                 ->send();
@@ -100,7 +100,7 @@ class Confirm2Fa extends SimplePage implements HasForms
     protected function throwTotpcodeValidationException(): never
     {
         throw ValidationException::withMessages([
-            'totp_code' => 'The TOTP code has expired or is invalid.',
+            'totp_code' => __('filament-2fa::two-factor.fail_2fa'),
         ]);
     }
 }
