@@ -13,13 +13,14 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Models\Contracts\FilamentUser;
+use Optimacloud\Filament2fa\TwoFactorAuthResponse;
 use Optimacloud\Filament2fa\FilamentTwoFactor;
-use Illuminate\Validation\ValidationException;
 use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
+use Illuminate\Validation\ValidationException;
 
 class Login extends BaseLogin
 {
-    public function authenticate(): ?LoginResponse
+    public function authenticate(): null|TwoFactorAuthResponse|LoginResponse
     {
         try {
             $this->rateLimit(5);
@@ -30,31 +31,38 @@ class Login extends BaseLogin
         }
 
         $data = $this->form->getState();
-        
-        if (isset($data['login_with_recovery_code']) && $data['login_with_recovery_code']) {
-            /** Login with 2FA Recovery code */
+        $responseClass = LoginResponse::class;
+
+        /** Login with Email & 2FA Recovery code */
+        if (isset($data['login_with_recovery_code']) && $data['login_with_recovery_code']) {            
             $user = $this->getAuthModel()::whereEmail($data['email'])->first();            
-            if (!app(FilamentTwoFactor::class, ['input' => 'code', 'code' => $data['code'], 'safeDeviceInput' => true])->loginWithRecoveryCode($user)) {                
+            if (!app(FilamentTwoFactor::class, ['input' => 'code', 'code' => $data['code'], 'safeDeviceInput' => true])->loginWithRecoveryCode($user)) {
                 $this->throwCodeValidationException('code');
             }
             Filament::auth()->login($user, $data['remember']);
+            goto response;
+        }
 
-        } else {
-            if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
-                $this->throwFailureValidationException();
-            }
+        /** Login with Email & Password */
+        if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
+            $this->throwFailureValidationException();
         }
 
         $user = Filament::auth()->user();
-
-        /** Verify 2FA code on login page */
-        if (isset($data['2fa_code']) && $data['2fa_code']) {
-            if (!app(FilamentTwoFactor::class, ['input' => '2fa_code', 'code' => $data['2fa_code'], 'safeDeviceInput' => $data['safe_device_enable']])->validate($user)) {
-                Filament::auth()->logout();
-                $this->throwCodeValidationException('2fa_code');
-            }
+        if ($user instanceof TwoFactorAuthenticatable && $user->hasTwoFactorEnabled() && config('two-factor.safe_devices.enabled', false) && !$user->isSafeDevice(request())) {
+            $responseClass = TwoFactorAuthResponse::class;
+            goto response;
         }
 
+        /** Verify 2FA code on login page */
+        // if (isset($data['2fa_code']) && $data['2fa_code']) {
+        //     if (!app(FilamentTwoFactor::class, ['input' => '2fa_code', 'code' => $data['2fa_code'], 'safeDeviceInput' => $data['safe_device_enable']])->validate($user)) {
+        //         Filament::auth()->logout();
+        //         $this->throwCodeValidationException('2fa_code');
+        //     }
+        // }
+
+        response:
         if (
             ($user instanceof FilamentUser) &&
             (! $user->canAccessPanel(Filament::getCurrentPanel()))
@@ -66,7 +74,7 @@ class Login extends BaseLogin
 
         session()->regenerate();
 
-        return app(LoginResponse::class);
+        return app($responseClass);
     }
 
     protected function throwCodeValidationException($fieldName): never
