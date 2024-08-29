@@ -35,9 +35,9 @@ class Login extends BaseLogin
 
         /** Login with Email & 2FA Recovery code */
         if (isset($data['login_with_recovery_code']) && $data['login_with_recovery_code']) {            
-            $user = $this->getAuthModel()::whereEmail($data['email'])->first();            
-            if (!app(FilamentTwoFactor::class, ['input' => 'code', 'code' => $data['code'], 'safeDeviceInput' => true])->loginWithRecoveryCode($user)) {
-                $this->throwCodeValidationException('code');
+            $user = $this->getAuthModel()::whereEmail($data['email'])->first();       
+            if (!app(FilamentTwoFactor::class, ['input' => 'code', 'code' => $data['code'], 'safeDeviceInput' => false])->validate2Fa($user)) {
+                $this->throwRecoveryCodeValidationException('code');
             }
             Filament::auth()->login($user, $data['remember']);
             goto response;
@@ -49,18 +49,12 @@ class Login extends BaseLogin
         }
 
         $user = Filament::auth()->user();
+
+        /** Check If user loggedin with unsafe device redirecting to 2fa verification page */
         if ($user instanceof TwoFactorAuthenticatable && $user->hasTwoFactorEnabled() && config('two-factor.safe_devices.enabled', false) && !$user->isSafeDevice(request())) {
             $responseClass = TwoFactorAuthResponse::class;
             goto response;
         }
-
-        /** Verify 2FA code on login page */
-        // if (isset($data['2fa_code']) && $data['2fa_code']) {
-        //     if (!app(FilamentTwoFactor::class, ['input' => '2fa_code', 'code' => $data['2fa_code'], 'safeDeviceInput' => $data['safe_device_enable']])->validate($user)) {
-        //         Filament::auth()->logout();
-        //         $this->throwCodeValidationException('2fa_code');
-        //     }
-        // }
 
         response:
         if (
@@ -68,7 +62,6 @@ class Login extends BaseLogin
             (! $user->canAccessPanel(Filament::getCurrentPanel()))
         ) {
             Filament::auth()->logout();
-
             $this->throwFailureValidationException();
         }
 
@@ -77,10 +70,10 @@ class Login extends BaseLogin
         return app($responseClass);
     }
 
-    protected function throwCodeValidationException($fieldName): never
+    protected function throwRecoveryCodeValidationException($fieldName): never
     {
         throw ValidationException::withMessages([
-            "data.$fieldName" => 'TOTP code expired or invalid',
+            "data.$fieldName" => 'The recovery code is invalid, expired, or has already been used.',
         ]);
     }
 
@@ -96,28 +89,12 @@ class Login extends BaseLogin
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent()
                             ->visible(fn(Get $get) => !$get('login_with_recovery_code')),
-                        // $this->get2FaFormComponent(),
                         $this->getRecoveryCodeFormComponent(),
                         $this->getRememberFormComponent(),
                     ])
                     ->statePath('data'),
             ),
         ];
-    }
-
-    protected function get2FaFormComponent(): Component
-    {
-        return
-            Group::make([
-                TextInput::make('2fa_code')
-                    ->label('One Time Pin')
-                    ->required()
-                    ->numeric()
-                    ->minLength(6)
-                    ->maxLength(6)
-                    ->autocomplete(false),
-                Checkbox::make('safe_device_enable')
-            ]);
     }
 
     protected function getRecoveryCodeFormComponent(): Component

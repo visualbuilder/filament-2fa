@@ -100,7 +100,7 @@ class Confirm2Fa extends SimplePage implements HasForms
     protected function throwTotpcodeValidationException(): never
     {
         throw ValidationException::withMessages([
-            'totp_code' => 'TOTP code expired or invalid',
+            'totp_code' => 'The TOTP code has expired or is invalid.',
         ]);
     }
 }

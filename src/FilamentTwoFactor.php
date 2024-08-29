@@ -109,17 +109,4 @@ class FilamentTwoFactor extends TwoFactor
     {
         return (bool)$this->safeDeviceInput;
     }
-
-    public function loginWithRecoveryCode(Authenticatable $user)
-    {
-        // If the code is valid, return true only after we try to save the safe device.
-        if ($this->requestHasCode() && $user->validateTwoFactorCode()) {
-            if ($this->isSafeDevicesEnabled() && $this->wantsToAddDevice()) {
-                $user->addSafeDevice($this->request);
-            }
-            return true;
-        }
-        return false;
-    }
-
 }
