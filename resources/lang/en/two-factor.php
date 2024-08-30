@@ -16,6 +16,8 @@ return [
 
     'safe_device' => 'We won\'t ask you for Two-Factor Authentication codes in this device for some time.',
 
+    'totp_or_recovery_code'   => 'One time Pin or Recovery code',
+    'confirm_otp_hint'  => 'An OTP should have :otpLength digits, while a recovery code can be alphanumeric and should be :recoveryLength characters.',
     'one_time_pin'   => 'One Time Pin',
     'enable_safe_device'   => 'Enable safe device',
     'confirm'   => 'Confirm code',

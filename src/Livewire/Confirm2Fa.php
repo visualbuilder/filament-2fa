@@ -6,6 +6,7 @@ use Exception;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Group;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -62,12 +63,12 @@ class Confirm2Fa extends SimplePage implements HasForms
     {
         return
             Group::make([
+                Placeholder::make('Hint')
+                    ->label('')
+                    ->content(__('filament-2fa::two-factor.confirm_otp_hint', ['otpLength' => config('two-factor.totp.digits'), 'recoveryLength' => config('two-factor.recovery.length')])),
                 TextInput::make('totp_code')
-                    ->label(__('filament-2fa::two-factor.one_time_pin'))
+                    ->label(__('filament-2fa::two-factor.totp_or_recovery_code'))
                     ->required()
-                    ->numeric()
-                    ->minLength(6)
-                    ->maxLength(6)
                     ->autocomplete(false),
                 Toggle::make('safe_device_enable')
                     ->label(__('filament-2fa::two-factor.enable_safe_device'))
