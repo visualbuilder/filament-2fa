@@ -17,6 +17,7 @@ use Filament\Pages\SimplePage;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Crypt;
 use Optimacloud\Filament2fa\FilamentTwoFactor;
 
 class Confirm2Fa extends SimplePage implements HasForms
@@ -36,8 +37,14 @@ class Confirm2Fa extends SimplePage implements HasForms
         return false;
     }
 
-    public function getUser(): Authenticatable & Model
+    public function authenticate(): null|bool|Model
     {
+        [$credentials, $remember] = $this->getFlashedData();
+    
+        if (! Filament::auth()->attempt($credentials, $remember) ) {
+            return false;
+        }
+
         $user = Filament::auth()->user();
 
         if (! $user instanceof Model) {
@@ -84,19 +91,47 @@ class Confirm2Fa extends SimplePage implements HasForms
     {
         $formData = $this->form->getState();
 
-        if (app(FilamentTwoFactor::class, ['input' => 'totp_code', 'code' => $formData['totp_code'], 'safeDeviceInput' => $formData['safe_device_enable'] ?: false])->validate2Fa($this->getUser())) {
-            Notification::make()
-                ->title('Success')
-                ->body(__('filament-2fa::two-factor.success'))
-                ->icon('heroicon-o-check-circle')
-                ->color('success')
-                ->send();
-            request()->session()->put('2fa_verified', time());
+        $user = $this->authenticate();
+
+        if(!$user) {
             $this->redirect(Filament::getUrl());
         } else {
-            $this->throwTotpcodeValidationException();
+            if ($user && app(FilamentTwoFactor::class, ['input' => 'totp_code', 'code' => $formData['totp_code'], 'safeDeviceInput' => $formData['safe_device_enable'] ?: false])->validate2Fa($user)) {
+                Notification::make()
+                    ->title('Success')
+                    ->body(__('filament-2fa::two-factor.success'))
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->send();
+                $this->redirect(Filament::getUrl());
+            } else {
+                Filament::auth()->logout();
+                session()->regenerate();
+                $this->throwTotpcodeValidationException();
+            }
         }
     }
+
+
+    /**
+     * Retrieve the flashed credentials in the session, and merges with the new on top.
+     *
+     * @param  array{credentials:array, remember:bool}  $credentials
+     */
+    protected function getFlashedData(): array
+    {
+        $sessionKey = config('filament2fa.login.credential_key');
+        $credentials = request()->session()->pull("$sessionKey.credentials", []);
+        $remember = request()->session()->pull("$sessionKey.remember", false);
+
+        foreach ($credentials as $index => $value) {
+            $credentials[$index] = Crypt::decryptString($value);
+        }
+
+        return [$credentials, $remember];
+    }
+
+
 
     protected function throwTotpcodeValidationException(): never
     {

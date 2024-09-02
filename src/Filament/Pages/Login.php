@@ -9,6 +9,7 @@ use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Models\Contracts\FilamentUser;
 use Optimacloud\Filament2fa\TwoFactorAuthResponse;
 use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
+use Illuminate\Support\Facades\Crypt;
 
 class Login extends BaseLogin
 {
@@ -23,6 +24,7 @@ class Login extends BaseLogin
         }
 
         $data = $this->form->getState();
+
         $responseClass = LoginResponse::class;
 
         if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
@@ -34,6 +36,8 @@ class Login extends BaseLogin
         /** Check If user loggedin with unsafe device redirecting to 2fa verification page */
         if ($user instanceof TwoFactorAuthenticatable && $user->hasTwoFactorEnabled() && config('two-factor.safe_devices.enabled', false) && !$user->isSafeDevice(request())) {
             $responseClass = TwoFactorAuthResponse::class;
+            $this->flashData($this->getCredentialsFromFormData($data), $data['remember'] ?? false);
+            Filament::auth()->logout();
             goto response;
         }
 
@@ -49,5 +53,21 @@ class Login extends BaseLogin
         session()->regenerate();
 
         return app($responseClass);
+    }
+
+    /**
+     * Flashes the credentials into the session, encrypted.
+     */
+    protected function flashData(array $credentials, bool $remember): void
+    {
+        foreach ($credentials as $key => $value) {
+            $credentials[$key] = Crypt::encryptString($value);
+        }
+
+        if (config('filament2fa.login.flashLoginCredentials')) {
+            request()->session()->flash(config('filament2fa.login.credential_key'), ['credentials' => $credentials, 'remember' => $remember]);
+        } else {
+            request()->session()->put(config('filament2fa.login.credential_key'), ['credentials' => $credentials, 'remember' => $remember]);
+        }
     }
 }

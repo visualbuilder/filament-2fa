@@ -11,4 +11,9 @@ return [
         '2fa.register',
         'logout',
     ],
+
+    'login' => [
+        'flashLoginCredentials' => false,
+        'credential_key' => '_2fa_login',
+    ]
 ];
