@@ -2,6 +2,8 @@
 
 namespace Optimacloud\Filament2fa\Filament\Pages;
 
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Component;
@@ -17,6 +19,7 @@ use Filament\Pages\Auth\EditProfile;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Facades\FilamentView;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use function Filament\Support\is_app_url;
 
@@ -27,6 +30,15 @@ class Configure extends EditProfile
     public static ?string $slug = 'two-factor-authentication';
 
     public ?string $maxWidth = '6xl';
+
+    public Collection $recoveryCodes;
+
+    public bool $showRecoveryCodes = true;
+
+    public function __construct()
+    {
+        $this->recoveryCodes = $this->getUser()->getRecoveryCodes();
+    }
 
 
     public static function getLabel(): string
@@ -68,7 +80,7 @@ class Configure extends EditProfile
     protected function getSaveFormAction(): Action
     {
         return Action::make('save')
-            ->label(__('filament-2fa::two-factor.action_label'))
+            ->label($this->getUser()->hasTwoFactorEnabled() ? __('filament-2fa::two-factor.save_changes') : __('filament-2fa::two-factor.action_label') )
             ->submit('save')
             ->keyBindings(['mod+s']);
     }
@@ -184,9 +196,18 @@ class Configure extends EditProfile
                     ->label(__('filament-2fa::two-factor.enabled_at'))
                     ->format(config('filament-2fa.defaultDateTimeDisplayFormat'))
                     ->readOnly(),
+                Actions::make([
+                    FormAction::make('GenerateRecoveryCode')
+                        ->label(__('filament-2fa::two-factor.generate_recovery_code'))
+                        ->action(function () {
+                            $this->recoveryCodes = $this->getUser()->generateRecoveryCodes();
+                        })
+                        ->requiresConfirmation()
+                ]),
                 Placeholder::make('recovery_code')
                     ->label('')
-                    ->content($this->prepareRecoveryCodes()),
+                    ->content($this->prepareRecoveryCodes())
+                    ->visible($this->showRecoveryCodes),
                 Toggle::make('disable_two_factor_auth')
                     ->label(__('filament-2fa::two-factor.disable_2fa'))
                     ->inline(false)
@@ -201,7 +222,7 @@ class Configure extends EditProfile
 
     public function prepareRecoveryCodes(): HtmlString
     {
-        $recoveryCodesArray = Arr::pluck($this->getUser()->getRecoveryCodes(), 'code');
+        $recoveryCodesArray = Arr::pluck($this->recoveryCodes, 'code');
         $recoveryCodes = "<p>" . __('filament-2fa::two-factor.recovery_instruction') . "</p><ul>";
         foreach ($recoveryCodesArray as $code) {
             $recoveryCodes .= "<li>$code</li>";

@@ -24,6 +24,8 @@ return [
     'enabled_at' => 'Enabled at',
     'switch_on' => 'Go to enable Two-Factor Authentication.',
     'disable_2fa' => 'Diable Two-Factor Authentication.',
+    'generate_recovery_code' => 'Generate Recovery Code',
+    'save_changes' => 'Save Changes',
 
     'recovery_code' => [
         'recovery_code'    => 'Reovery code',
