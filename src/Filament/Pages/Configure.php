@@ -33,13 +33,13 @@ class Configure extends EditProfile
 
     public Collection $recoveryCodes;
 
-    public bool $showRecoveryCodes = true;
+    public bool $showRecoveryCodes;
 
     public function __construct()
     {
         $this->recoveryCodes = $this->getUser()->getRecoveryCodes();
+        $this->showRecoveryCodes = false;
     }
-
 
     public static function getLabel(): string
     {
@@ -80,7 +80,7 @@ class Configure extends EditProfile
     protected function getSaveFormAction(): Action
     {
         return Action::make('save')
-            ->label($this->getUser()->hasTwoFactorEnabled() ? __('filament-2fa::two-factor.save_changes') : __('filament-2fa::two-factor.action_label') )
+            ->label($this->getUser()->hasTwoFactorEnabled() ? __('filament-2fa::two-factor.save_changes') : __('filament-2fa::two-factor.action_label'))
             ->submit('save')
             ->keyBindings(['mod+s']);
     }
@@ -197,8 +197,16 @@ class Configure extends EditProfile
                     ->format(config('filament-2fa.defaultDateTimeDisplayFormat'))
                     ->readOnly(),
                 Actions::make([
+                    FormAction::make('ShowRecoveryCode')
+                        ->color('success')
+                        ->icon($this->showRecoveryCodes ? 'heroicon-m-eye-slash' : 'heroicon-m-eye')
+                        ->label($this->showRecoveryCodes ? __('filament-2fa::two-factor.hide_recovery_code') : __('filament-2fa::two-factor.show_recovery_code'))
+                        ->action(function () {                            
+                            $this->showRecoveryCodes = $this->showRecoveryCodes ? false : true;
+                        })->requiresConfirmation(),
                     FormAction::make('GenerateRecoveryCode')
-                        ->label(__('filament-2fa::two-factor.generate_recovery_code'))
+                        ->icon('heroicon-m-key')
+                        ->label(__('filament-2fa::two-factor.generate_recovery_code').$this->showRecoveryCodes)
                         ->action(function () {
                             $this->recoveryCodes = $this->getUser()->generateRecoveryCodes();
                         })
@@ -217,7 +225,8 @@ class Configure extends EditProfile
                     ->offIcon('heroicon-m-check-circle')
                     ->live()
                     ->afterStateUpdated(fn($state) => $this->data['disable_two_factor_auth'] = $state),
-            ])->visible($this->getUser()->hasTwoFactorEnabled());
+            ])
+            ->visible($this->getUser()->hasTwoFactorEnabled());
     }
 
     public function prepareRecoveryCodes(): HtmlString
