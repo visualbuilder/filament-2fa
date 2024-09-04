@@ -1,20 +1,29 @@
 <?php
 
 use Filament\Facades\Filament;
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Optimacloud\Filament2fa\Filament\Pages\Configure;
-use Optimacloud\Filament2fa\Tests\Models\User;
-
+use Laragear\TwoFactor\Models\TwoFactorAuthentication;
+use function Pest\Livewire\livewire;
 
 it('can access configure page by user', function () {
     $this->actingAs(
-        User::create(['email' => 'admin@domain.com', 'name' => 'Admin', 'password' => Hash::make('password') ])
+        $this->createUser()
     )->get(Configure::getUrl())->assertSuccessful();
 });
 
+it('can see 2fa confirm code', function () {
+    $user = $this->createUser();
+    $this->actingAs($user);
+    livewire(Configure::class)
+        ->assertFormExists()
+        ->assertFormFieldExists('2fa_code');
+});
+
 it('can enable two factor authentication', function () {
-    $this->actingAs(
-        User::create(['email' => 'admin@domain.com', 'name' => 'Admin', 'password' => Hash::make('password') ])
+    $user = $this->createUser();
+    $this->actingAs($user);        
+    $user->twoFactorAuth()->save(
+        TwoFactorAuthentication::factory()->make()
     );
+    expect($user->hasTwoFactorEnabled())->toBeTrue();
 });

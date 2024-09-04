@@ -13,10 +13,12 @@ use Filament\Support\SupportServiceProvider;
 use Filament\Tables\TablesServiceProvider;
 use Filament\Widgets\WidgetsServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
 use Optimacloud\Filament2fa\Filament2faServiceProvider;
+use Optimacloud\Filament2fa\Tests\Models\User;
 
 class TestCase extends Orchestra
 {
@@ -105,5 +107,15 @@ class TestCase extends Orchestra
         config()->set('database.default', 'testing');
 
         config()->set('two-factor', $configs);
+    }
+
+    public function createUser() 
+    {
+        return User::create($this->credentials());
+    }
+
+    public function credentials()
+    {
+        return ['email' => 'admin@domain.com', 'name' => 'Admin', 'password' => Hash::make('password') ];
     }
 }
