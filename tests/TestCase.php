@@ -18,7 +18,7 @@ use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
 use Optimacloud\Filament2fa\Filament2faServiceProvider;
-use Optimacloud\Filament2fa\Tests\Models\User;
+use Optimacloud\Filament2fa\Tests\Models\Admin;
 
 class TestCase extends Orchestra
 {
@@ -111,7 +111,7 @@ class TestCase extends Orchestra
 
     public function createUser() 
     {
-        return User::create($this->credentials());
+        return Admin::create($this->credentials());
     }
 
     public function credentials()

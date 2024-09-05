@@ -1,6 +1,7 @@
 <?php
 
 use Filament\Facades\Filament;
+use Filament\Forms\Components\TextInput;
 use Optimacloud\Filament2fa\Filament\Pages\Configure;
 use Laragear\TwoFactor\Models\TwoFactorAuthentication;
 use function Pest\Livewire\livewire;
@@ -15,7 +16,8 @@ it('can see 2fa confirm code', function () {
     $user = $this->createUser();
     $this->actingAs($user);
     livewire(Configure::class)
-        ->assertFormExists()
+        ->refresh()
+        ->assertFormExists()        
         ->assertFormFieldExists('2fa_code');
 });
 
