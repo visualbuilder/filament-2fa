@@ -24,6 +24,8 @@ class TestCase extends Orchestra
 {
     use RefreshDatabase;
 
+    protected Admin $user;
+
     protected function setUp(): void
     {
         parent::setUp();
