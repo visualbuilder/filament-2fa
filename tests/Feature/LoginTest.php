@@ -1,11 +1,8 @@
 <?php
 
 use Filament\Facades\Filament;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse;
-use Optimacloud\Filament2fa\Filament\Pages\Configure;
 use Laragear\TwoFactor\Models\TwoFactorAuthentication;
 use Optimacloud\Filament2fa\Filament\Pages\Login;
-use Optimacloud\Filament2fa\Tests\Models\Admin;
 
 use function Pest\Livewire\livewire;
 
@@ -37,7 +34,8 @@ it('can login without 2factor', function () {
             'password' => 'password'
         ])
         ->call('authenticate')
-        ->assertHasNoFormErrors();
+        ->assertHasNoFormErrors()
+        ->assertRedirect(Filament::getUrl());
     expect(auth()->user()->email)->toEqual('admin@domain.com');
 });
 

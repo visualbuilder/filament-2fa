@@ -12,7 +12,7 @@ it('can access configure page by user', function () {
     )->get(Configure::getUrl())->assertSuccessful();
 });
 
-it('can see 2fa confirm code', function () {
+it('can see 2fa confirm code & validateion', function () {
     $user = $this->createUser();
     $this->actingAs($user);
     livewire(Configure::class)
