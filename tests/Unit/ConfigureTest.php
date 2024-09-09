@@ -1,7 +1,5 @@
 <?php
 
-use Filament\Facades\Filament;
-use Filament\Forms\Components\TextInput;
 use Optimacloud\Filament2fa\Filament\Pages\Configure;
 use Laragear\TwoFactor\Models\TwoFactorAuthentication;
 use function Pest\Livewire\livewire;

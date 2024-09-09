@@ -1,6 +1,5 @@
 <?php
 
-use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Crypt;
 use Laragear\TwoFactor\Models\TwoFactorAuthentication;
 use Optimacloud\Filament2fa\Filament\Pages\Login;
