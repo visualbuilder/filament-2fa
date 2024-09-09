@@ -13,7 +13,7 @@ use Optimacloud\Filament2fa\Traits\TwoFactorAuthentication;
  * @property string $name
  * @property string $password
  */
-class Admin extends Authenticatable implements FilamentUser, TwoFactorAuthenticatable 
+class User extends Authenticatable implements FilamentUser, TwoFactorAuthenticatable 
 {
     use TwoFactorAuthentication;
 

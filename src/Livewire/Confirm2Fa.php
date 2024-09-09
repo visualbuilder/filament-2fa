@@ -121,8 +121,8 @@ class Confirm2Fa extends SimplePage implements HasForms
     protected function getFlashedData(): array
     {
         $sessionKey = config('filament2fa.login.credential_key');
-        $credentials = request()->session()->pull("$sessionKey.credentials", []);
-        $remember = request()->session()->pull("$sessionKey.remember", false);
+        $credentials = session("$sessionKey.credentials", []);
+        $remember = session("$sessionKey.remember", false);
 
         foreach ($credentials as $index => $value) {
             $credentials[$index] = Crypt::decryptString($value);

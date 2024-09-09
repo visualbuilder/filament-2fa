@@ -14,17 +14,18 @@ use Filament\Tables\TablesServiceProvider;
 use Filament\Widgets\WidgetsServiceProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
 use Optimacloud\Filament2fa\Filament2faServiceProvider;
-use Optimacloud\Filament2fa\Tests\Models\Admin;
+use Optimacloud\Filament2fa\Tests\Models\User;
 
 class TestCase extends Orchestra
 {
     use RefreshDatabase;
 
-    protected Admin $user;
+    protected User $user;
 
     protected function setUp(): void
     {
@@ -77,7 +78,7 @@ class TestCase extends Orchestra
                 'length' => 8,
             ],
             'safe_devices' => [
-                'enabled' => false,
+                'enabled' => true,
                 'cookie' => '_2fa_remember',
                 'max_devices' => 3,
                 'expiration_days' => 14,
@@ -109,11 +110,65 @@ class TestCase extends Orchestra
         config()->set('database.default', 'testing');
 
         config()->set('two-factor', $configs);
+
+        config()->set('auth', [
+
+            'defaults' => [
+                'guard' => 'web',
+                'passwords' => 'users',
+            ],
+
+            'guards' => [
+                
+                'web' => [
+                    'driver' => 'session',
+                    'provider' => 'users',
+                ],
+            ],
+        
+            'providers' => [
+                'users' => [
+                    'driver' => 'eloquent',
+                    'model' => User::class,
+                ]
+            ],
+        
+            'passwords' => [
+                'users' => [
+                    'provider' => 'users',
+                    'table' => 'password_reset_tokens',
+                    'expire' => 60,
+                    'throttle' => 60,
+                ],
+            ],
+            'password_timeout' => 10800,
+        ]);
+
+        config()->set('session', [
+            'driver' => env('SESSION_DRIVER', 'file'),
+            'lifetime' => env('SESSION_LIFETIME', 120),
+            'expire_on_close' => false,
+            'encrypt' => false,
+            'files' => storage_path('framework/sessions'),
+            'connection' => env('SESSION_CONNECTION'),
+            'table' => 'sessions',
+            'store' => env('SESSION_STORE'),
+            'lottery' => [2, 100],
+            'cookie' => env(
+                'SESSION_COOKIE',
+                Str::slug(env('APP_ENV', 'laravel'), '_').'_session'
+            ),
+            'path' => '/',            
+            'domain' => env('SESSION_DOMAIN'),        
+            'secure' => env('SESSION_SECURE_COOKIE',true),            
+            'http_only' => true,            
+            'same_site' => 'lax',            
+        ]);
     }
 
     public function createUser() 
     {
-        return Admin::create($this->credentials());
+        return User::create($this->credentials());
     }
 
     public function credentials()

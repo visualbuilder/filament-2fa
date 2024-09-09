@@ -67,7 +67,7 @@ class Login extends BaseLogin
         if (config('filament2fa.login.flashLoginCredentials')) {
             request()->session()->flash(config('filament2fa.login.credential_key'), ['credentials' => $credentials, 'remember' => $remember]);
         } else {
-            request()->session()->put(config('filament2fa.login.credential_key'), ['credentials' => $credentials, 'remember' => $remember]);
+            session([config('filament2fa.login.credential_key') => ['credentials' => $credentials, 'remember' => $remember]]);
         }
     }
 }
