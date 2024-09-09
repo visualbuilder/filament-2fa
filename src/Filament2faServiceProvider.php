@@ -59,7 +59,8 @@ class Filament2faServiceProvider extends PackageServiceProvider
     protected function publishConfigs()
     {
         $this->publishes([
-            base_path('vendor/laragear/two-factor/config/two-factor.php') => base_path('config/two-factor.php')
+            base_path('vendor/laragear/two-factor/config/two-factor.php') => base_path('config/two-factor.php'),
+            base_path('config/filament-2fa.php') => base_path('config/filament-2fa.php'),
         ]);
     }
 }

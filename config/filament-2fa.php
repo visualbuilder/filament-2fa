@@ -1,5 +1,7 @@
 <?php
 
+use Filament\Pages\SubNavigationPosition;
+
 return [
     'defaultDateTimeDisplayFormat'  => 'd M Y H:i',
 
@@ -15,5 +17,16 @@ return [
     'login' => [
         'flashLoginCredentials' => false,
         'credential_key' => '_2fa_login',
+    ],
+
+    'navigation' => [
+        'visibile_on_navbar' => true,
+        'icon' => 'heroicon-o-key',
+        'group' => 'Auth Security',
+        'label' => 'Two Factor Auth',
+        'cluster' => null,
+        'sort_no' => 10,
+        'subnav_position' => SubNavigationPosition::Top
     ]
+
 ];

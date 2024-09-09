@@ -17,9 +17,11 @@ use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ViewField;
 use Filament\Notifications\Notification;
 use Filament\Pages\Auth\EditProfile;
+use Filament\Pages\SubNavigationPosition;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Facades\FilamentView;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
@@ -40,17 +42,50 @@ class Configure extends EditProfile
 
     public bool $showRecoveryCodes;    
 
-    protected static bool $shouldRegisterNavigation = false;
-
     public function __construct()
     {
         $this->recoveryCodes = $this->getUser()->hasTwoFactorEnabled() ? $this->getUser()->getRecoveryCodes() : [];
         $this->showRecoveryCodes = false;
     }
 
+    public static function shouldRegisterNavigation(): bool
+    {
+        return config('filament-2fa.navigation.visibile_on_navbar');
+    }
+
     public static function getLabel(): string
     {
         return __('filament-2fa::two-factor.profile_label');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return config('filament-2fa.navigation.label');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return config('filament-2fa.navigation.group');
+    }
+
+    public static function getNavigationIcon(): string|Htmlable|null
+    {
+        return config('filament-2fa.navigation.icon');
+    }
+
+    public static function getCluster(): ?string
+    {
+        return config('filament-2fa.navigation.cluster');
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return config('filament-2fa.navigation.sort_no');
+    }
+
+    public function getSubNavigationPosition(): SubNavigationPosition
+    {
+        return config('filament-2fa.navigation.subnav_position');
     }
 
     public static function getRelativeRouteName(): string
