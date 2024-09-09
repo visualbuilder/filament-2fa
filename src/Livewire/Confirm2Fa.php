@@ -37,6 +37,11 @@ class Confirm2Fa extends SimplePage implements HasForms
         return false;
     }
 
+    public static function getSort(): int
+    {
+        return static::$sort ?? -1;
+    }
+
     public function authenticate(): null|bool|Model
     {
         [$credentials, $remember] = $this->getFlashedData();
@@ -83,7 +88,8 @@ class Confirm2Fa extends SimplePage implements HasForms
                     ->onColor('success')
                     ->offColor('danger')
                     ->onIcon('heroicon-m-check-circle')
-                    ->offIcon('heroicon-m-x-mark'),
+                    ->offIcon('heroicon-m-x-mark')
+                    ->visible(config('two-factor.safe_devices.enabled'))
             ]);
     }
 
@@ -96,7 +102,7 @@ class Confirm2Fa extends SimplePage implements HasForms
         if(!$user) {
             $this->redirect(Filament::getUrl());
         } else {
-            if ($user && app(FilamentTwoFactor::class, ['input' => 'totp_code', 'code' => $formData['totp_code'], 'safeDeviceInput' => $formData['safe_device_enable'] ?: false])->validate2Fa($user)) {
+            if ($user && app(FilamentTwoFactor::class, ['input' => 'totp_code', 'code' => $formData['totp_code'], 'safeDeviceInput' => isset($formData['safe_device_enable']) ? $formData['safe_device_enable'] : false])->validate2Fa($user)) {
                 Notification::make()
                     ->title('Success')
                     ->body(__('filament-2fa::two-factor.success'))

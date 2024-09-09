@@ -2,6 +2,7 @@
 
 namespace Optimacloud\Filament2fa\Filament\Pages;
 
+use Exception;
 use Filament\Forms\Components\Actions;
 use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Actions\Action;
@@ -18,9 +19,13 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Auth\EditProfile;
 use Filament\Support\Enums\Alignment;
 use Filament\Support\Facades\FilamentView;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
+use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
+
 use function Filament\Support\is_app_url;
 
 
@@ -31,13 +36,15 @@ class Configure extends EditProfile
 
     public ?string $maxWidth = '6xl';
 
-    public Collection $recoveryCodes;
+    public Collection|array $recoveryCodes;
 
-    public bool $showRecoveryCodes;
+    public bool $showRecoveryCodes;    
+
+    protected static bool $shouldRegisterNavigation = false;
 
     public function __construct()
     {
-        $this->recoveryCodes = $this->getUser()->getRecoveryCodes();
+        $this->recoveryCodes = $this->getUser()->hasTwoFactorEnabled() ? $this->getUser()->getRecoveryCodes() : [];
         $this->showRecoveryCodes = false;
     }
 
@@ -49,6 +56,17 @@ class Configure extends EditProfile
     public static function getRelativeRouteName(): string
     {
         return self::$slug;
+    }
+
+    public function getUser(): Authenticatable & Model
+    {
+        $user = Filament::auth()->user();
+    
+        if (! $user instanceof Model || !$user instanceof TwoFactorAuthenticatable) {
+            throw new Exception('The authenticated user object must be an Eloquent model to allow the profile page to update it.');
+        }
+
+        return $user;
     }
 
     public static function getRouteName(?string $panel = null): string
@@ -207,7 +225,7 @@ class Configure extends EditProfile
                         })->requiresConfirmation(),
                     FormAction::make('GenerateRecoveryCode')
                         ->icon('heroicon-m-key')
-                        ->label(__('filament-2fa::two-factor.generate_recovery_code').$this->showRecoveryCodes)
+                        ->label(__('filament-2fa::two-factor.generate_recovery_code'))
                         ->action(function () {
                             $this->recoveryCodes = $this->getUser()->generateRecoveryCodes();
                         })

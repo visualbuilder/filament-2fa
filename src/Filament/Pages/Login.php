@@ -34,7 +34,7 @@ class Login extends BaseLogin
         $user = Filament::auth()->user();
 
         /** Check If user loggedin with unsafe device redirecting to 2fa verification page */
-        if ($user instanceof TwoFactorAuthenticatable && $user->hasTwoFactorEnabled() && config('two-factor.safe_devices.enabled', false) && !$user->isSafeDevice(request())) {
+        if ($user instanceof TwoFactorAuthenticatable && $user->hasTwoFactorEnabled() && !$user->isSafeDevice(request())) {
             $responseClass = TwoFactorAuthResponse::class;
             $this->flashData($this->getCredentialsFromFormData($data), $data['remember'] ?? false);
             Filament::auth()->logout();
