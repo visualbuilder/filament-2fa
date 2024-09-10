@@ -40,7 +40,7 @@ class Configure extends EditProfile
 
     public Collection|array $recoveryCodes;
 
-    public bool $showRecoveryCodes;    
+    public bool $showRecoveryCodes;
 
     public function __construct()
     {
@@ -96,9 +96,9 @@ class Configure extends EditProfile
     public function getUser(): Authenticatable & Model
     {
         $user = Filament::auth()->user();
-    
+
         if (! $user instanceof Model || !$user instanceof TwoFactorAuthenticatable) {
-            throw new Exception('The authenticated user object must be an Eloquent model to allow the profile page to update it.');
+            throw new Exception('The authenticated user must be an Eloquent model implementing TwoFactorAuthenticatable class.');
         }
 
         return $user;
@@ -167,9 +167,6 @@ class Configure extends EditProfile
         }
     }
 
-    /**
-     * @return array<int | string, string | Form>
-     */
     protected function getForms(): array
     {
         return [
@@ -237,27 +234,22 @@ class Configure extends EditProfile
     }
 
 
-    /**
-     * ToDo Show Recovery codes only once or for 5 mins??  If lirewire refreshes the view we will lose them
-     *
-     * ToDo Allow user to generate new recovery codes
-     */
     protected function disable2FactorAuthGroupComponent(): Component
     {
         return Group::make()
             ->schema([
-                DateTimePicker::make('enabled_at')
-                    ->label(__('filament-2fa::two-factor.enabled_at'))
-                    ->format(config('filament-2fa.defaultDateTimeDisplayFormat'))
-                    ->readOnly(),
+                Placeholder::make('2fa_info')
+                    ->label(fn($record) =>
+                    __('filament-2fa::two-factor.enabled_message',
+                        ['date'=>$record->enabled_at?->format(config('filament-2fa.defaultDateTimeDisplayFormat'))])),
                 Actions::make([
                     FormAction::make('ShowRecoveryCode')
                         ->color('success')
                         ->icon($this->showRecoveryCodes ? 'heroicon-m-eye-slash' : 'heroicon-m-eye')
                         ->label($this->showRecoveryCodes ? __('filament-2fa::two-factor.hide_recovery_code') : __('filament-2fa::two-factor.show_recovery_code'))
-                        ->action(function () {                            
-                            $this->showRecoveryCodes = $this->showRecoveryCodes ? false : true;
-                        })->requiresConfirmation(),
+                        ->action(function () {
+                            $this->showRecoveryCodes = !$this->showRecoveryCodes;
+                        }),
                     FormAction::make('GenerateRecoveryCode')
                         ->icon('heroicon-m-key')
                         ->label(__('filament-2fa::two-factor.generate_recovery_code'))

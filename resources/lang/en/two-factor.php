@@ -11,8 +11,9 @@ return [
 
     'fail_2fa' => 'The TOTP code has expired or is invalid.',
     'fail_confirm' => 'The OTP to activate Two-Factor Authentication is invalid.',
-    'enabled'      => 'Two-Factor Authentication has been enabled for your account.',
-    'disabled'     => 'Two-Factor Authentication has been disabled for your account.',
+    'enabled'      => 'Two-Factor Authentication has been enabled.',
+    'disabled'     => 'Two-Factor Authentication has been disabled.',
+    'enabled_message' => 'Two-Factor Authentication was enabled on :date.',
 
     'safe_device' => 'We won\'t ask you for Two-Factor Authentication codes in this device for some time.',
 
@@ -23,15 +24,15 @@ return [
     'confirm'   => 'Confirm code',
     'enabled_at' => 'Enabled at',
     'switch_on' => 'Go to enable Two-Factor Authentication.',
-    'disable_2fa' => 'Diable Two-Factor Authentication.',
-    'generate_recovery_code' => 'Generate New Recovery Code',
-    'hide_recovery_code' => 'Hide recovery code',
-    'show_recovery_code' => 'Show recovery code',
+    'disable_2fa' => 'Disable Two-Factor Authentication.',
+    'generate_recovery_code' => 'Generate new recovery codes',
+    'hide_recovery_code' => 'Hide recovery codes',
+    'show_recovery_code' => 'Show recovery codes',
     'save_changes' => 'Save Changes',
-    
+
 
     'recovery_code' => [
-        'recovery_code'    => 'Reovery code',
+        'recovery_code'    => 'Recovery code',
         'toggle_recovery_login' => 'Login with recovery code',
         'error_message'   => 'The recovery code is invalid, expired, or has already been used.',
         'used'      => 'You have used a Recovery Code. Remember to regenerate them if you have used almost all.',
@@ -46,10 +47,10 @@ return [
     'setup_step_1' => 'Step 1. Scan the QR Code',
     'setup_step_2' => 'Step 2. Enter the pin provided by your app',
 
-    'action_label'  => 'Submit 2FA Pin and complete setup',
+    'action_label'  => 'Submit OTP Pin and complete setup',
 
     'setup_message_1' => 'When two factor authentication is enabled, you will prompted for a secure pin during login. Your phone\'s authenticator application will provide a new pin every 60 seconds',
-    'setup_message_2' => 'To enable 2FA scan the following QR code using your phone\'s authenticator application and submit TOTP code to confirm setup. ',
+    'setup_message_2' => 'To enable 2FA scan the following QR code using your phone\'s authenticator application and enter the OTP code to confirm setup.',
 
-    'recovery_instruction' => 'Save these recovery codes in a safe place. Each code can be used once to recover account if your two factor authentication device is lost.'
+    'recovery_instruction' => 'Save these recovery codes in a safe place. Each code can be used once to recover your account if your two factor authentication device is lost.'
 ];
