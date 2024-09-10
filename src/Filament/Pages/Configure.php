@@ -265,6 +265,7 @@ class Configure extends EditProfile
                         ->action(function () {
                             $this->recoveryCodes = $this->getUser()->generateRecoveryCodes();
                         })
+                        ->visible($this->showRecoveryCodes)
                         ->requiresConfirmation()
                 ]),
                 Placeholder::make('recovery_code')
