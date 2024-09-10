@@ -17,6 +17,7 @@ return [
     'login' => [
         'flashLoginCredentials' => false,
         'credential_key' => '_2fa_login',
+        'confirm_totp_page_url' => 'confirm-2fa'
     ],
 
     'navigation' => [

@@ -16,6 +16,6 @@ Route::middleware([
     AuthenticateSession::class,
 ])->group(function () {
     Route::name('2fa.')->group(function () {
-        Route::get('confirm-2fa', Confirm2Fa::class)->name('validate');
+        Route::get( config('filament-2fa.login.confirm_totp_page_url') , Confirm2Fa::class)->name('validate');
     });
 });

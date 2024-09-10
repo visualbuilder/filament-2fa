@@ -42,6 +42,14 @@ class Confirm2Fa extends SimplePage implements HasForms
         return static::$sort ?? -1;
     }
 
+    public function mount()
+    {
+        [$credentials, $remember] = $this->getFlashedData();
+        if(!$credentials) {
+            return redirect(Filament::getLoginUrl());
+        }
+    }
+
     public function authenticate(): null|bool|Model
     {
         [$credentials, $remember] = $this->getFlashedData();

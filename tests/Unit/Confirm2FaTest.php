@@ -1,5 +1,6 @@
 <?php
 
+use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Crypt;
 use Laragear\TwoFactor\Models\TwoFactorAuthentication;
 use Optimacloud\Filament2fa\Filament\Pages\Login;
@@ -7,6 +8,11 @@ use Optimacloud\Filament2fa\Livewire\Confirm2Fa;
 
 
 use function Pest\Livewire\livewire;
+
+it('check confirm page without login credentials', function () {
+    $this->get(url(config('filament-2fa.login.confirm_totp_page_url')))
+        ->assertRedirect(Filament::getLoginUrl());
+});
 
 it('check encrypted credentiasl are stored on sessions', function () {
     $user = $this->createUser();
