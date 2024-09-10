@@ -29,6 +29,7 @@ return [
     'hide_recovery_code' => 'Hide recovery codes',
     'show_recovery_code' => 'Show recovery codes',
     'save_changes' => 'Save Changes',
+    'back_to_dashboard' => 'Back to Dashboard',
 
 
     'recovery_code' => [

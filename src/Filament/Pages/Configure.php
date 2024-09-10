@@ -40,12 +40,11 @@ class Configure extends EditProfile
 
     public Collection|array $recoveryCodes;
 
-    public bool $showRecoveryCodes;
+    public bool $showRecoveryCodes = false;
 
     public function __construct()
     {
         $this->recoveryCodes = $this->getUser()->hasTwoFactorEnabled() ? $this->getUser()->getRecoveryCodes() : [];
-        $this->showRecoveryCodes = false;
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -137,6 +136,15 @@ class Configure extends EditProfile
             ->submit('save')
             ->keyBindings(['mod+s']);
     }
+
+    public function getCancelFormAction(): Action
+    {
+        return Action::make('back')
+            ->label(__('filament-2fa::two-factor.back_to_dashboard'))
+            ->url(Filament::getUrl())
+            ->color('gray');
+    }
+
     protected function afterSave(): void
     {
         if (isset($this->data['disable_two_factor_auth']) && $this->data['disable_two_factor_auth'] === true) {
@@ -165,6 +173,7 @@ class Configure extends EditProfile
                     ->send();
             }
         }
+        $this->js('$wire.$refresh()');
     }
 
     protected function getForms(): array
@@ -233,7 +242,6 @@ class Configure extends EditProfile
         ];
     }
 
-
     protected function disable2FactorAuthGroupComponent(): Component
     {
         return Group::make()
@@ -249,6 +257,7 @@ class Configure extends EditProfile
                         ->label($this->showRecoveryCodes ? __('filament-2fa::two-factor.hide_recovery_code') : __('filament-2fa::two-factor.show_recovery_code'))
                         ->action(function () {
                             $this->showRecoveryCodes = !$this->showRecoveryCodes;
+                            $this->js('$wire.$refresh()');
                         }),
                     FormAction::make('GenerateRecoveryCode')
                         ->icon('heroicon-m-key')
