@@ -54,6 +54,6 @@ class TwoFactorPlugin implements Plugin
 
     public function boot(Panel $panel): void
     {
-        //
+        TwoFactorHelper::validateAuthModel();
     }
 }

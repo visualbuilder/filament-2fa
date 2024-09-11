@@ -28,6 +28,12 @@ return [
         'cluster' => null,
         'sort_no' => 10,
         'subnav_position' => SubNavigationPosition::Top
-    ]
+    ],
 
+    'auth_guards' => [
+        'web' => [
+            'enabled' => 'true', 
+            'mandatory' => false
+        ]
+    ]
 ];
