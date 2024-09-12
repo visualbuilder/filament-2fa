@@ -14,10 +14,9 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
-use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Validation\ValidationException;
 use Optimacloud\Filament2fa\FilamentTwoFactor;
 
 class Confirm2Fa extends SimplePage implements HasForms
@@ -32,44 +31,100 @@ class Confirm2Fa extends SimplePage implements HasForms
 
     public string $totp_code;
 
-    public function hasTopbar(): bool
-    {
-        return false;
-    }
-
     public static function getSort(): int
     {
         return static::$sort ?? -1;
     }
 
+    public static function canView()
+    {
+        return false;
+    }
+
+    public function hasTopbar(): bool
+    {
+        return false;
+    }
+
     public function mount()
     {
         [$credentials, $remember] = $this->getFlashedData();
-        if(!$credentials) {
+        if (!$credentials) {
             return redirect(Filament::getLoginUrl());
+        }
+    }
+
+    /**
+     * Retrieve the flashed credentials in the session, and merges with the new on top.
+     *
+     * @param  array{credentials:array, remember:bool}  $credentials
+     */
+    protected function getFlashedData(): array
+    {
+        $sessionKey = config('filament2fa.login.credential_key');
+        $credentials = session("$sessionKey.credentials", []);
+        $remember = session("$sessionKey.remember", false);
+
+        foreach ($credentials as $index => $value) {
+            $credentials[$index] = Crypt::decryptString($value);
+        }
+
+        return [$credentials, $remember];
+    }
+
+    public function submit(): void
+    {
+        $formData = $this->form->getState();
+
+        $user = $this->authenticate();
+
+        if (!$user) {
+            $this->redirect(Filament::getUrl());
+        } else {
+            if (app(FilamentTwoFactor::class,
+                    [
+                        //Why  is 'input' needed?
+//                        'input'           => 'totp_code',
+                        'code'            => $formData['totp_code'],
+                        'safeDeviceInput' => isset($formData['safe_device_enable']) ? $formData['safe_device_enable'] : false
+                    ])->validate2Fa($user)) {
+                Notification::make()
+                    ->title('Success')
+                    ->body(__('filament-2fa::two-factor.success'))
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->send();
+                $this->redirect(Filament::getUrl());
+            } else {
+                Filament::auth()->logout();
+                session()->regenerate();
+                $this->throwTotpcodeValidationException();
+            }
         }
     }
 
     public function authenticate(): null|bool|Model
     {
         [$credentials, $remember] = $this->getFlashedData();
-    
-        if (! Filament::auth()->attempt($credentials, $remember) ) {
+
+        if (!Filament::auth()->attempt($credentials, $remember)) {
             return false;
         }
 
         $user = Filament::auth()->user();
 
-        if (! $user instanceof Model) {
+        if (!$user instanceof Model) {
             throw new Exception('The authenticated user object must be an Eloquent model to allow the profile page to update it.');
         }
 
         return $user;
     }
 
-    public static function canView()
+    protected function throwTotpcodeValidationException(): never
     {
-        return false;
+        throw ValidationException::withMessages([
+            'totp_code' => __('filament-2fa::two-factor.fail_2fa'),
+        ]);
     }
 
     protected function getFormSchema(): array
@@ -99,58 +154,5 @@ class Confirm2Fa extends SimplePage implements HasForms
                     ->offIcon('heroicon-m-x-mark')
                     ->visible(config('two-factor.safe_devices.enabled'))
             ]);
-    }
-
-    public function submit(): void
-    {
-        $formData = $this->form->getState();
-
-        $user = $this->authenticate();
-
-        if(!$user) {
-            $this->redirect(Filament::getUrl());
-        } else {
-            if ($user && app(FilamentTwoFactor::class, ['input' => 'totp_code', 'code' => $formData['totp_code'], 'safeDeviceInput' => isset($formData['safe_device_enable']) ? $formData['safe_device_enable'] : false])->validate2Fa($user)) {
-                Notification::make()
-                    ->title('Success')
-                    ->body(__('filament-2fa::two-factor.success'))
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->send();
-                $this->redirect(Filament::getUrl());
-            } else {
-                Filament::auth()->logout();
-                session()->regenerate();
-                $this->throwTotpcodeValidationException();
-            }
-        }
-    }
-
-
-    /**
-     * Retrieve the flashed credentials in the session, and merges with the new on top.
-     *
-     * @param  array{credentials:array, remember:bool}  $credentials
-     */
-    protected function getFlashedData(): array
-    {
-        $sessionKey = config('filament2fa.login.credential_key');
-        $credentials = session("$sessionKey.credentials", []);
-        $remember = session("$sessionKey.remember", false);
-
-        foreach ($credentials as $index => $value) {
-            $credentials[$index] = Crypt::decryptString($value);
-        }
-
-        return [$credentials, $remember];
-    }
-
-
-
-    protected function throwTotpcodeValidationException(): never
-    {
-        throw ValidationException::withMessages([
-            'totp_code' => __('filament-2fa::two-factor.fail_2fa'),
-        ]);
     }
 }

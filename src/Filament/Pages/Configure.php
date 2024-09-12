@@ -49,7 +49,7 @@ class Configure extends EditProfile
 
     public static function shouldRegisterNavigation(): bool
     {
-        return config('filament-2fa.navigation.visibile_on_navbar');
+        return config('filament-2fa.navigation.visible_on_navbar');
     }
 
     public static function getLabel(): string
