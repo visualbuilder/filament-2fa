@@ -21,7 +21,7 @@ return [
     ],
 
     'navigation' => [
-        'visibile_on_navbar' => true,
+        'visible_on_navbar' => true,
         'icon' => 'heroicon-o-key',
         'group' => 'Auth Security',
         'label' => 'Two Factor Auth',
