@@ -50,6 +50,72 @@ $filament2fa = new Optimacloud\Filament2fa();
 echo $filament2fa->echoPhrase('Hello, Optimacloud!');
 ```
 
+### Step 1:
+
+Implement TwoFactorAuthenticatables on auth model
+
+```php
+use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
+use Optimacloud\Filament2fa\Traits\TwoFactorAuthentication;
+
+class Admin extends Authenticatable implements FilamentUser, TwoFactorAuthenticatable
+{
+    use HasFactory, TwoFactorAuthentication;
+}
+```
+
+### Step 2:
+
+Add TwoFactor Plugin on PanelServiceProvider
+
+```php
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        ->default()
+        ->id('admin')
+        ->plugins([
+            TwoFactorPlugin::make()
+        ])
+}
+```
+
+### Step 3:
+
+Add TwoFactor Login class on PanelServiceProvider
+
+```php
+use Optimacloud\Filament2fa\Filament\Pages\Login;
+
+public function panel(Panel $panel): Panel
+{
+    return $panel
+        ->default()
+        ->id('admin')
+        ->plugins([
+            TwoFactorPlugin::make()
+        ])
+        ->login(Login::class)
+}
+```
+
+### Step 4:
+
+Can enable or disable TwoFactor in filament-2fa.php config file
+
+```php
+return [
+    'auth_guards' => [
+        'web' => [
+            'enabled' => 'true', 
+            'mandatory' => false
+        ]
+    ]
+];
+```
+
+
+
 ## Testing
 
 ```bash
