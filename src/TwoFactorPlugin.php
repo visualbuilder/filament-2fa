@@ -54,6 +54,9 @@ class TwoFactorPlugin implements Plugin
 
     public function boot(Panel $panel): void
     {
-        TwoFactorHelper::validateAuthModel();
+        /**
+         * This should be in middleware
+         */
+        //TwoFactorHelper::validateAuthModel();
     }
 }
