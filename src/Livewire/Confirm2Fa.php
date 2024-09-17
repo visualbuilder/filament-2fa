@@ -61,7 +61,7 @@ class Confirm2Fa extends SimplePage implements HasForms
      */
     protected function getFlashedData(): array
     {
-        $sessionKey = config('filament2fa.login.credential_key');
+        $sessionKey = config('filament-2fa.login.credential_key');
         $credentials = session("$sessionKey.credentials", []);
         $remember = session("$sessionKey.remember", false);
 

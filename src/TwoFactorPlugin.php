@@ -4,6 +4,7 @@ namespace Optimacloud\Filament2fa;
 
 use Filament\Contracts\Plugin;
 use Filament\Panel;
+use Optimacloud\Filament2fa\BannerManager\BannerPlugin;
 use Optimacloud\Filament2fa\Filament\Pages\Configure;
 use Optimacloud\Filament2fa\Livewire\Confirm2Fa;
 
@@ -41,6 +42,11 @@ class TwoFactorPlugin implements Plugin
     {
         $panel->resources([
 
+        ]);
+
+        $panel->plugins([
+            BannerPlugin::make()
+                ->persistsBannersInDatabase()
         ]);
 
         $panel->pages([
