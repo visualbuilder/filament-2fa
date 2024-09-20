@@ -2,6 +2,7 @@
 
 namespace Optimacloud\Filament2fa;
 
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -14,6 +15,7 @@ class Filament2faServiceProvider extends PackageServiceProvider
     public function configurePackage(Package $package): void
     {
         $package->name("filament-2fa")
+            ->hasMigrations(['create_banner_table'])
             ->hasConfigFile(['filament-2fa'])
             ->hasViews('filament-2fa')
             ->hasRoute('web')
@@ -42,17 +44,12 @@ class Filament2faServiceProvider extends PackageServiceProvider
 
     protected function publishMigrations()
     {
-        $now = now();
         $files = Collection::make(File::files(base_path('vendor/laragear/two-factor/database/migrations')))
             ->mapWithKeys(fn(\SplFileInfo $file): array => [
                 $file->getRealPath() => Str::of($file->getFileName())
-                    ->after('0000_00_00_000000')
-                    ->prepend($now->addSecond()->format('Y_m_d_His'))
-                    ->prepend('/')
-                    ->prepend($this->app->databasePath('migrations'))
+                    ->prepend($this->app->databasePath('migrations/'))
                     ->toString(),
             ]);
-
         $this->publishes($files->toArray(), 'filament-2fa-migrations');
     }
 
