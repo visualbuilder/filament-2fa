@@ -23,7 +23,7 @@
             x-show="show"
             x-data="{
                 show: true,
-                storageKey: 'kenepa-banners::closed',
+                storageKey: 'filament-banners::closed',
                 init() {
                     this.hasBeenClosedByUser();
                 },
@@ -76,14 +76,14 @@
                 </div>
             </div>
             <div class="col-span-1 flex justify-end absolute" style="right: 10px;top:10px;">
-                {{-- @if ($banner->can_be_closed_by_user) --}}
+                @if ($banner->can_be_closed_by_user)
                     <x-filament::icon
                         x-on:click="close"
                         alias="banner::close"
                         icon="heroicon-m-x-mark"
                         class="h-6 w-6 text-gray-500 dark:text-gray-400 text-white cursor-pointer hover:opacity-75"
                     />
-                {{-- @endif --}}
+                @endif
             </div>
         </div>
     @endif

@@ -27,6 +27,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
+use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource;
 
 use function Filament\Support\is_app_url;
 
@@ -195,6 +196,12 @@ class Configure extends EditProfile
     protected function getTwoFactorAuthFormComponent(): Component
     {
         return Section::make(__('filament-2fa::two-factor.profile_title'))
+            ->headerActions([
+                FormAction::make('Notification Banner')
+                    ->action(function () {
+                        redirect(TwoFactorBannerResource::getUrl());
+                    }),
+            ])
             ->relationship('twoFactorAuth')
             ->schema([
                 $this->enable2FactorAuthGroupComponent(),
