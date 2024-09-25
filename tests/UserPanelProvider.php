@@ -17,6 +17,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Optimacloud\Filament2fa\Filament\Pages\Configure;
+use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource;
 
 class UserPanelProvider extends PanelProvider
 {
@@ -29,7 +30,10 @@ class UserPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Amber,
             ])
-            ->pages([
+            ->resources([
+                TwoFactorBannerResource::class
+            ])
+            ->pages([                
                 Configure::class
             ])
             ->userMenuItems([

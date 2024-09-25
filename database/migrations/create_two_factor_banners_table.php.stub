@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up()
     {
-        Schema::create('banners', function (Blueprint $table) {
+        Schema::create('two_factor_banners', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->text('content');
@@ -29,5 +29,13 @@ return new class extends Migration
             $table->dateTime('end_time')->nullable();
             $table->timestamps();
         });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('two_factor_banners');
     }
 };

@@ -5,11 +5,13 @@ namespace Optimacloud\Filament2fa\Models;
 use Carbon\Carbon;
 use Filament\Facades\Filament;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Optimacloud\Filament2fa\Database\Factories\TwoFactorBannerFactory;
 
 class TwoFactorBanner extends Model
 {
-    protected $table = 'banners';
+    use HasFactory;
 
     protected $fillable = [
         'name',
@@ -38,6 +40,15 @@ class TwoFactorBanner extends Model
         'scope' => 'array',
         'auth_guards' => 'array'
     ];
+
+    /**
+     * @return TwoFactorBannerFactory
+     */
+    protected static function newFactory()
+    {
+        return TwoFactorBannerFactory::new();
+    }
+
 
     public function isVisible(): bool
     {

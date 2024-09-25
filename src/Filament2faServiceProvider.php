@@ -15,7 +15,7 @@ class Filament2faServiceProvider extends PackageServiceProvider
     public function configurePackage(Package $package): void
     {
         $package->name("filament-2fa")
-            ->hasMigrations(['create_banner_table'])
+            ->hasMigrations(['create_two_factor_banners_table'])
             ->hasConfigFile(['filament-2fa'])
             ->hasViews('filament-2fa')
             ->hasRoute('web')

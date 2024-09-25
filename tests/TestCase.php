@@ -59,6 +59,9 @@ class TestCase extends Orchestra
         $userMigration = include __DIR__.'/database/migrations/create_users_table.php';
         $userMigration->up();
 
+        $userMigration = include __DIR__.'/database/migrations/create_two_factor_banners_table.php';
+        $userMigration->up();
+
         $twoFactorMigration = include __DIR__.'/../vendor/laragear/two-factor/database/migrations/0000_00_00_000000_create_two_factor_authentications_table.php';
         $twoFactorMigration->up();
         
