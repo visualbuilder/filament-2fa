@@ -26,7 +26,7 @@ class TwoFactorBannerFactory extends Factory
             'icon' => "academic-cap",
             'icon_color' => "#FF0000",
             'background_type' => 'solid',
-            'start_color' => null,
+            'start_color' => "#FF0000",
             'end_color' => null,
             'start_time' => null,
             'end_time' => null,  

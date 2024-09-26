@@ -8,6 +8,7 @@ use Optimacloud\Filament2fa\Filament\Pages\Configure;
 use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource;
 use Optimacloud\Filament2fa\Http\Middleware\SetRenderLocation;
 use Optimacloud\Filament2fa\Livewire\Confirm2Fa;
+use Optimacloud\Filament2fa\Livewire\TwoFactorBanner;
 
 class TwoFactorPlugin implements Plugin
 {
@@ -50,7 +51,7 @@ class TwoFactorPlugin implements Plugin
         ]);
 
         $panel->resources([
-            TwoFactorBannerResource::class
+            // TwoFactorBannerResource::class
         ]);
 
         $panel->middleware([
@@ -58,7 +59,8 @@ class TwoFactorPlugin implements Plugin
         ], true);
 
         $panel->pages([
-            Configure::class
+            Configure::class,
+            TwoFactorBanner::class
         ]);
 
         $panel->widgets([
