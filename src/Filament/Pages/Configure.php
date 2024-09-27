@@ -196,12 +196,6 @@ class Configure extends EditProfile
     protected function getTwoFactorAuthFormComponent(): Component
     {
         return Section::make(__('filament-2fa::two-factor.profile_title'))
-            ->headerActions([
-                FormAction::make('Notification Banner')
-                    ->action(function () {
-                        redirect(TwoFactorBannerResource::getUrl());
-                    }),
-            ])
             ->relationship('twoFactorAuth')
             ->schema([
                 $this->enable2FactorAuthGroupComponent(),

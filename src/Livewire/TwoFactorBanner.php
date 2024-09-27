@@ -3,6 +3,7 @@
 namespace Optimacloud\Filament2fa\Livewire;
 
 use Filament\Forms\Components\Actions\Action as ComponentAction;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DateTimePicker;
@@ -14,20 +15,43 @@ use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
 use Filament\Forms\Set;
+use Filament\Notifications\Notification;
+use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
+use Filament\Support\Enums\MaxWidth;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Str;
+use Illuminate\Support\Arr;
+use Optimacloud\Filament2fa\Enums\ScheduleStatus;
+use Optimacloud\Filament2fa\Models\TwoFactorBanner as ModelsTwoFactorBanner;
 
 class TwoFactorBanner extends SimplePage implements HasForms
 {
+    use InteractsWithForms, InteractsWithFormActions;
+
     protected static string $view = 'filament-2fa::livewire.two-factor-banner';
 
     public ?array $data = [];
-    
-    protected function getFormSchema(): array
+
+    public function getMaxWidth(): MaxWidth
     {
-        return [
+        return MaxWidth::FiveExtraLarge;
+    }
+
+    public function mount()
+    {
+        $twoFactorBanner = ModelsTwoFactorBanner::first();
+        $this->form->fill($twoFactorBanner->toArray());
+    }
+    
+    public function form(Form $form): Form
+    {
+        return $form
+            ->schema([
                 Section::make('')->schema([
                 Tabs::make('Tabs')
                 ->tabs([
@@ -176,7 +200,114 @@ class TwoFactorBanner extends SimplePage implements HasForms
                         ])->columns(2),
                 ])->contained(false)
             ])
-        ];
+        ])->statePath('data');
+    }
+
+    public function submit(): void
+    {        
+        $formData = $this->form->getState();
+        $twoFactorBanner = ModelsTwoFactorBanner::first();
+        if(!$twoFactorBanner) {
+            $twoFactorBanner = new ModelsTwoFactorBanner();
+        }
+        $twoFactorBanner = $twoFactorBanner->fill($formData);
+        $twoFactorBanner->save();
+
+        Notification::make()
+            ->title('Saved successfully')
+            ->success()
+            ->send();
+    }
+
+    public static function calculateScheduleStatus($start_time, $end_time): ScheduleStatus | string
+    {
+
+        if (is_null($start_time) && is_null($end_time)) {
+            return '';
+        }
+
+        if ($start_time && $end_time) {
+            if (now()->between($start_time, $end_time)) {
+                return ScheduleStatus::Visible->getLabel();
+            }
+
+            if (now()->isAfter($end_time)) {
+                return ScheduleStatus::Fulfilled->getLabel();
+            }
+
+            if (now()->isBefore($start_time)) {
+                return ScheduleStatus::Due->getLabel();
+            }
+        }
+
+        if (is_null($start_time) && $end_time) {
+            if (now()->isBefore($end_time)) {
+                return ScheduleStatus::Visible->getLabel();
+            }
+
+            if (now()->isAfter($end_time)) {
+                return ScheduleStatus::Fulfilled->getLabel();
+            }
+        }
+
+        if (is_null($end_time) && $start_time) {
+            if (now()->isBefore($start_time)) {
+                return ScheduleStatus::Due->getLabel();
+            }
+
+            if (now()->isAfter($start_time)) {
+                return ScheduleStatus::Visible->getLabel();
+            }
+        }
+
+        return '';
+    }
+
+    private static function getScopes(): array
+    {
+        /**
+         * @var resource[] $resources
+         */
+        $resources = self::getPanelResources();
+        $scopes = [];
+
+        foreach ($resources as $resource) {
+            $resourceSlug = $resource::getSlug();
+            $resourcePath = str($resource)->value();
+            $scopes[$resourceSlug] = [$resourcePath => Str::afterLast(str($resourcePath), '\\')];
+            $scopes[$resourceSlug] = array_merge($scopes[$resourceSlug], self::getPagesForResource($resource));
+        }
+
+        return $scopes;
+    }
+
+    /**
+     * @param  resource  $resourceClass
+     * @return string[]
+     */
+    private static function getPagesForResource($resourceClass): array
+    {
+        $pages = [];
+
+        foreach ($resourceClass::getPages() as $page) {
+            $pageClass = $page->getPage();
+            $pageName = Str::afterLast($pageClass, '\\');
+            $pages[$pageClass] = $pageName;
+        }
+
+        return $pages;
+    }
+
+    private static function getPanelResources(): array
+    {
+        return array_values(Filament::getCurrentPanel()->getResources());
+    }
+
+    private static function getAuthGuards()
+    {
+        $filteredGuards = Arr::where(config('filament-2fa.auth_guards'), fn (array $value, string $key) => (bool)$value['enabled'] === true);
+        [$keys, $values] = Arr::divide($filteredGuards);
+        return array_combine(array_values($keys),array_values($keys));
     }
 
 }
