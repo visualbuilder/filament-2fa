@@ -35,5 +35,7 @@ return [
             'enabled' => 'true', 
             'mandatory' => false
         ]
-    ]
+    ],
+
+    '2fa_banner_url' => 'two-factor-banner'
 ];

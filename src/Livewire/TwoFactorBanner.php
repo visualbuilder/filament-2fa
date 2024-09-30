@@ -45,7 +45,9 @@ class TwoFactorBanner extends SimplePage implements HasForms
     public function mount()
     {
         $twoFactorBanner = ModelsTwoFactorBanner::first();
-        $this->form->fill($twoFactorBanner->toArray());
+        if($twoFactorBanner) {
+            $this->form->fill($twoFactorBanner->toArray());
+        }
     }
     
     public function form(Form $form): Form

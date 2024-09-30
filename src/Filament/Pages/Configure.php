@@ -27,7 +27,6 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
-use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource;
 
 use function Filament\Support\is_app_url;
 

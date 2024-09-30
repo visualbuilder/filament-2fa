@@ -18,6 +18,6 @@ Route::middleware([
 ])->group(function () {
     Route::name('2fa.')->group(function () {
         Route::get( config('filament-2fa.login.confirm_totp_page_url') , Confirm2Fa::class)->name('validate');
-        Route::get( 'two-factor-banner' , TwoFactorBanner::class)->name('banner');
+        Route::get( config('filament-2fa.2fa_banner_url') , TwoFactorBanner::class)->name('banner');
     });
 });
