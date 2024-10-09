@@ -30,7 +30,7 @@ it('check encrypted credentiasl are stored on sessions', function () {
         ->call('authenticate')
         ->assertRedirect('/confirm-2fa');    
 
-    $sessionKey = config('filament2fa.login.credential_key');
+    $sessionKey = config('filament-2fa.login.credential_key');
     $credentials = session("$sessionKey.credentials", []);
     expect(Crypt::decryptString($credentials['email']) )->toEqual($loginEmail);
     livewire(Confirm2Fa::class)
@@ -54,7 +54,7 @@ it('Confirm 2FA TOTP code check validation errors', function () {
         ->call('authenticate')
         ->assertRedirect('/confirm-2fa');    
         
-    $sessionKey = config('filament2fa.login.credential_key');
+    $sessionKey = config('filament-2fa.login.credential_key');
     $credentials = session("$sessionKey.credentials", []);
     expect(Crypt::decryptString($credentials['email']) )->toEqual($loginEmail);
 
@@ -90,7 +90,7 @@ it('Confirm 2FA TOTP code', function () {
         ->call('authenticate')
         ->assertRedirect('/confirm-2fa');    
         
-    $sessionKey = config('filament2fa.login.credential_key');
+    $sessionKey = config('filament-2fa.login.credential_key');
     $credentials = session("$sessionKey.credentials", []);
     expect(Crypt::decryptString($credentials['email']) )->toEqual($loginEmail);
     livewire(Confirm2Fa::class)

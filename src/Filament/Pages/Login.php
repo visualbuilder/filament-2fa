@@ -64,10 +64,10 @@ class Login extends BaseLogin
             $credentials[$key] = Crypt::encryptString($value);
         }
 
-        if (config('filament2fa.login.flashLoginCredentials')) {
-            request()->session()->flash(config('filament2fa.login.credential_key'), ['credentials' => $credentials, 'remember' => $remember]);
+        if (config('filament-2fa.login.flashLoginCredentials')) {
+            request()->session()->flash(config('filament-2fa.login.credential_key'), ['credentials' => $credentials, 'remember' => $remember]);
         } else {
-            session([config('filament2fa.login.credential_key') => ['credentials' => $credentials, 'remember' => $remember]]);
+            session([config('filament-2fa.login.credential_key') => ['credentials' => $credentials, 'remember' => $remember]]);
         }
     }
 }
