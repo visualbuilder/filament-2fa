@@ -45,9 +45,7 @@ class TwoFactorBanner extends SimplePage implements HasForms
     public function mount()
     {
         $twoFactorBanner = ModelsTwoFactorBanner::first();
-        if($twoFactorBanner) {
-            $this->form->fill($twoFactorBanner->toArray());
-        }
+        $this->form->fill($twoFactorBanner ? $twoFactorBanner->toArray() : $this->defaultBanner());
     }
     
     public function form(Form $form): Form
@@ -62,7 +60,6 @@ class TwoFactorBanner extends SimplePage implements HasForms
                         ->schema([
                             TextInput::make('name')->required(),
                             Select::make('auth_guards')
-                                ->searchable()
                                 ->required()
                                 ->multiple()
                                 ->hintAction(ComponentAction::make('help')
@@ -310,6 +307,28 @@ class TwoFactorBanner extends SimplePage implements HasForms
         $filteredGuards = Arr::where(config('filament-2fa.auth_guards'), fn (array $value, string $key) => (bool)$value['enabled'] === true);
         [$keys, $values] = Arr::divide($filteredGuards);
         return array_combine(array_values($keys),array_values($keys));
+    }
+
+    private function defaultBanner()
+    {
+        return [
+            'name' => 'Two Factor Authentication - Alert',
+            'content' => '',
+            'is_active' => true,
+            'active_since' => null,
+            'icon' => 'heroicon-m-megaphone',
+            'background_type' => 'gradient',
+            'start_color' => '#FF6B6B',
+            'end_color' => '#FFD97D',
+            'start_time' => null,
+            'end_time' => null,
+            'can_be_closed_by_user' => true,
+            'text_color' => '#333333',
+            'icon_color' => '#FFFFFF',
+            'render_location' => PanelsRenderHook::BODY_START,
+            'scope' => [],
+            'auth_guards' => []
+        ];
     }
 
 }
