@@ -7,7 +7,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Optimacloud\Filament2fa\Livewire\TwoFactorBanner;
+use Optimacloud\Filament2fa\Livewire\Banner;
 
 Route::middleware([
     EncryptCookies::class,
@@ -18,6 +18,6 @@ Route::middleware([
 ])->group(function () {
     Route::name('2fa.')->group(function () {
         Route::get( config('filament-2fa.login.confirm_totp_page_url') , Confirm2Fa::class)->name('validate');
-        Route::get( config('filament-2fa.2fa_banner_url') , TwoFactorBanner::class)->name('banner');
+        Route::get( config('filament-2fa.banner.navigation.url') , Banner::class)->name('banner');
     });
 });

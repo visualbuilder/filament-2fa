@@ -2,6 +2,7 @@
 
 namespace Optimacloud\Filament2fa\Livewire;
 
+use Filament\Actions\Action;
 use Filament\Forms\Components\Actions\Action as ComponentAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
@@ -9,7 +10,6 @@ use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Tabs;
 use Filament\Forms\Components\Tabs\Tab;
@@ -27,33 +27,165 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 use Optimacloud\Filament2fa\Enums\ScheduleStatus;
-use Optimacloud\Filament2fa\Models\TwoFactorBanner as ModelsTwoFactorBanner;
+use Optimacloud\Filament2fa\Models\TwoFactorBanner;
 
-class TwoFactorBanner extends SimplePage implements HasForms
+class Banner extends SimplePage implements HasForms
 {
     use InteractsWithForms, InteractsWithFormActions;
 
-    protected static string $view = 'filament-2fa::livewire.two-factor-banner';
+    protected static string $view = 'filament-2fa::livewire.banner';
 
-    public ?array $data = [];
+    public static ?string $title = '2FA Notification Banners';
 
     public function getMaxWidth(): MaxWidth
     {
         return MaxWidth::FiveExtraLarge;
     }
 
-    public function mount()
+    public ?array $data = [];
+
+    public $banners = [];
+
+    public ?TwoFactorBanner $selectedBanner = null;
+
+    public static function getSort(): int
     {
-        $twoFactorBanner = ModelsTwoFactorBanner::first();
-        $this->form->fill($twoFactorBanner ? $twoFactorBanner->toArray() : $this->defaultBanner());
+        return static::$sort ?? -1;
     }
-    
+
+    public static function canView()
+    {
+        return false;
+    }
+
+    public static function getNavigationIcon(): ?string
+    {
+        return config('filament-2fa.banner.navigation.icon');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return config('filament-2fa.banner.navigation.label');
+    }
+
+    public static function canAccess(): bool
+    {        
+        $authGuards = config('filament-2fa.banner.auth_guards'); 
+        return isset($authGuards[Filament::getAuthGuard()]) && $authGuards[Filament::getAuthGuard()]['can_manage'];
+    }
+
+    public function mount(): void
+    {
+        $authGuards = config('filament-2fa.banner.auth_guards'); 
+        if( !(isset($authGuards[Filament::getAuthGuard()]) && $authGuards[Filament::getAuthGuard()]['can_manage']) ) {
+            abort(403, 'The current user is not authorized to access this page.');
+        }
+        $this->getScopes();
+
+        $this->form->fill();
+
+        $this->getBanners();
+    }
+
+    public function createNewBannerAction()
+    {
+        return Action::make('createNewBanner')
+            ->form($this->getSchema())
+            ->icon('heroicon-m-plus')
+            ->closeModalByClickingAway(false)
+            ->action(fn (array $data) => $this->createBanner($data))
+            ->slideOver();
+    }
+
+    public function deleteBannerAction()
+    {
+        return Action::make('deleteBanner')
+            ->action(function () {
+                TwoFactorBanner::where('id', $this->selectedBanner->id)->delete();
+                $this->selectedBanner = null;
+                $this->getBanners();
+
+                Notification::make()
+                    ->title('Banner deleted')
+                    ->icon('heroicon-m-trash')
+                    ->danger()
+                    ->send();
+
+            })
+            ->color('danger')
+            ->icon('heroicon-m-trash')
+            ->iconButton()
+            ->requiresConfirmation();
+    }
+
     public function form(Form $form): Form
     {
         return $form
-            ->schema([
-                Section::make('')->schema([
-                Tabs::make('Tabs')
+            ->schema($this->getSchema())
+            ->statePath('data');
+    }
+
+    public function updateBanner()
+    {
+        $updatedBannerData = $this->form->getState();
+
+        $this->selectedBanner->update($updatedBannerData);
+
+        $this->getBanners();
+
+        Notification::make()
+            ->title('Banner updated')
+            ->success()
+            ->send();
+    }
+
+    public function createBanner($data)
+    {
+        TwoFactorBanner::create($data);
+
+        Notification::make()
+            ->title('Banner created')
+            ->success()
+            ->send();
+
+        $this->getBanners();
+    }
+
+    public function getBanners(): void
+    {
+        $this->banners = TwoFactorBanner::get();
+    }
+
+    public function selectBanner(int $bannerId)
+    {
+        $this->selectedBanner = TwoFactorBanner::find($bannerId);
+
+        if (!$this->selectedBanner) {
+            Notification::make()
+                ->title('Failed to load banner')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
+        $this->form->fill($this->selectedBanner->toArray());
+    }
+
+    public function isBannerActive($bannerId)
+    {
+
+        if (is_null($this->selectedBanner)) {
+            return false;
+        }
+
+        return $this->selectedBanner->id === $bannerId;
+    }
+
+    public function getSchema(): array
+    {
+        return [
+            Tabs::make('Tabs')
                 ->tabs([
                     Tab::make('General')
                         ->icon('heroicon-m-wrench')
@@ -77,15 +209,15 @@ class TwoFactorBanner extends SimplePage implements HasForms
                                     'underline',
                                     'undo',
                                     'codeBlock',
-                                ])
-                                ->columnSpanFull(),
+                                ]),
                             Select::make('render_location')
                                 ->searchable()
                                 ->required()
                                 ->hintAction(ComponentAction::make('help')
                                     ->icon('heroicon-o-question-mark-circle')
-                                    ->extraAttributes(['class' => 'text-gray-500'])                                    
-                                    ->tooltip('With render location, you can select where a banner is rendered on the page. In combination with scopes, this becomes a powerful tool to manage where and when your banners are displayed. You can choose to render banners in the header, sidebar, or other strategic locations to maximize their visibility and impact.'))
+                                    ->extraAttributes(['class' => 'text-gray-500'])
+                                    ->label('')
+                                    ->tooltip('With render location, you can select where a banner is rendered on the page. In combination with scopes, this becomes a powerful tool to manage where and when your banners are displayed. You can choose to render banners in the header, sidebar, or other strategic locations to maximize their visibility and impact.'))                                
                                 ->options([
                                     'Panel' => [
                                         PanelsRenderHook::BODY_START => 'Header',
@@ -122,21 +254,22 @@ class TwoFactorBanner extends SimplePage implements HasForms
 
                             Select::make('scope')
                                 ->hintAction(ComponentAction::make('help')
-                                    ->icon('heroicon-o-question-mark-circle')                                    
+                                    ->icon('heroicon-o-question-mark-circle')
+                                    ->label('')
                                     ->extraAttributes(['class' => 'text-gray-500'])
                                     ->tooltip('With scoping, you can control where your banner is displayed. You can target your banner to specific pages or entire resources, ensuring it is shown to the right audience at the right time.'))
                                 ->searchable()
                                 ->multiple()
-                                ->options(fn () => self::getScopes()),
+                                ->options(fn () => $this->getScopes()),
                             Fieldset::make('Options')
                                 ->schema([
-                                    Checkbox::make('can_be_closed_by_user')                                        
+                                    Checkbox::make('can_be_closed_by_user')
                                         ->columnSpan('full'),
-                                    Checkbox::make('can_truncate_message')                                
+                                    Checkbox::make('can_truncate_message')
                                         ->columnSpan('full'),
                                 ]),
                             Toggle::make('is_active'),
-                        ])->columns(2),
+                        ]),
                     Tab::make('Styling')
                         ->icon('heroicon-m-paint-brush')
                         ->schema([
@@ -145,17 +278,17 @@ class TwoFactorBanner extends SimplePage implements HasForms
                                 ->required(),
                             Fieldset::make('Icon')
                                 ->schema([
-                                    TextInput::make('icon')                                        
+                                    TextInput::make('icon')
                                         ->default('heroicon-m-megaphone')
                                         ->placeholder('heroicon-m-wrench'),
-                                    ColorPicker::make('icon_color')                                        
+                                    ColorPicker::make('icon_color')
                                         ->default('#fafafa')
                                         ->required(),
                                 ])
                                 ->columns(3),
-                            Fieldset::make('background')                                
+                            Fieldset::make('background')
                                 ->schema([
-                                    Select::make('background_type')                                        
+                                    Select::make('background_type')
                                         ->reactive()
                                         ->selectablePlaceholder(false)
                                         ->default('solid')
@@ -163,10 +296,10 @@ class TwoFactorBanner extends SimplePage implements HasForms
                                             'solid' => 'Solid',
                                             'gradient' => 'Gradient',
                                         ])->default('solid'),
-                                    ColorPicker::make('start_color')                                        
+                                    ColorPicker::make('start_color')
                                         ->default('#D97706')
                                         ->required(),
-                                    ColorPicker::make('end_color')                                        
+                                    ColorPicker::make('end_color')
                                         ->default('#F59E0C')
                                         ->visible(fn ($get) => $get('background_type') === 'gradient'),
                                 ])
@@ -176,49 +309,92 @@ class TwoFactorBanner extends SimplePage implements HasForms
                         ->reactive()
                         ->icon('heroicon-m-clock')
                         ->badgeIcon('heroicon-m-eye')
-                        ->badge(fn ($get) => self::calculateScheduleStatus($get('start_time'), $get('end_time')))
+                        ->badge(fn ($get) => $this->calculateScheduleStatus($get('start_time'), $get('end_time')))
                         ->schema([
                             DateTimePicker::make('start_time')
-                                ->native(false)
                                 ->hintAction(
-                                    ComponentAction::make('reset')                                        
+                                    ComponentAction::make('reset')
                                         ->icon('heroicon-m-arrow-uturn-left')
                                         ->action(function (Set $set) {
                                             $set('start_time', null);
                                         })
                                 ),
                             DateTimePicker::make('end_time')
-                                ->native(false)
                                 ->hintAction(
-                                    ComponentAction::make('reset')                                        
+                                    ComponentAction::make('reset')
                                         ->icon('heroicon-m-arrow-uturn-left')
                                         ->action(function (Set $set) {
                                             $set('end_time', null);
                                         })
                                 ),
-                        ])->columns(2),
-                ])->contained(false)
-            ])
-        ])->statePath('data');
+                        ])->hidden(true),
+                ])->contained(false),
+        ];
     }
 
-    public function submit(): void
-    {        
-        $formData = $this->form->getState();
-        $twoFactorBanner = ModelsTwoFactorBanner::first();
-        if(!$twoFactorBanner) {
-            $twoFactorBanner = new ModelsTwoFactorBanner();
-        }
-        $twoFactorBanner = $twoFactorBanner->fill($formData);
-        $twoFactorBanner->save();
+    public function disableAllBanners()
+    {
+        TwoFactorBanner::query()->update(['is_active' => false]);
+        $this->getBanners();
 
         Notification::make()
-            ->title('Saved successfully')
+            ->title('Disabled all banners')
             ->success()
             ->send();
     }
 
-    public static function calculateScheduleStatus($start_time, $end_time): ScheduleStatus | string
+    public function enableAllBanners()
+    {
+        TwoFactorBanner::query()->update(['is_active' => true]);
+        $this->getBanners();
+
+        Notification::make()
+            ->title('Enabled all banners')
+            ->success()
+            ->send();
+    }
+
+    private function getScopes(): array
+    {
+        /**
+         * @var resource[] $resources
+         */
+        $resources = $this->getPanelResources();
+        $scopes = [];
+
+        foreach ($resources as $resource) {
+            $resourceSlug = $resource::getSlug();
+            $resourcePath = str($resource)->value();
+            $scopes[$resourceSlug] = [$resourcePath => Str::afterLast(str($resourcePath), '\\')];
+            $scopes[$resourceSlug] = array_merge($scopes[$resourceSlug], $this->getPagesForResource($resource));
+        }
+
+        return $scopes;
+    }
+
+    /**
+     * @param  resource  $resourceClass
+     * @return string[]
+     */
+    private function getPagesForResource($resourceClass): array
+    {
+        $pages = [];
+
+        foreach ($resourceClass::getPages() as $page) {
+            $pageClass = $page->getPage();
+            $pageName = Str::afterLast($pageClass, '\\');
+            $pages[$pageClass] = $pageName;
+        }
+
+        return $pages;
+    }
+
+    private function getPanelResources(): array
+    {
+        return array_values(Filament::getCurrentPanel()->getResources());
+    }
+
+    private function calculateScheduleStatus($start_time, $end_time): ScheduleStatus | string
     {
 
         if (is_null($start_time) && is_null($end_time)) {
@@ -262,73 +438,10 @@ class TwoFactorBanner extends SimplePage implements HasForms
         return '';
     }
 
-    private static function getScopes(): array
-    {
-        /**
-         * @var resource[] $resources
-         */
-        $resources = self::getPanelResources();
-        $scopes = [];
-
-        foreach ($resources as $resource) {
-            $resourceSlug = $resource::getSlug();
-            $resourcePath = str($resource)->value();
-            $scopes[$resourceSlug] = [$resourcePath => Str::afterLast(str($resourcePath), '\\')];
-            $scopes[$resourceSlug] = array_merge($scopes[$resourceSlug], self::getPagesForResource($resource));
-        }
-
-        return $scopes;
-    }
-
-    /**
-     * @param  resource  $resourceClass
-     * @return string[]
-     */
-    private static function getPagesForResource($resourceClass): array
-    {
-        $pages = [];
-
-        foreach ($resourceClass::getPages() as $page) {
-            $pageClass = $page->getPage();
-            $pageName = Str::afterLast($pageClass, '\\');
-            $pages[$pageClass] = $pageName;
-        }
-
-        return $pages;
-    }
-
-    private static function getPanelResources(): array
-    {
-        return array_values(Filament::getCurrentPanel()->getResources());
-    }
-
     private static function getAuthGuards()
     {
-        $filteredGuards = Arr::where(config('filament-2fa.auth_guards'), fn (array $value, string $key) => (bool)$value['enabled'] === true);
+        $filteredGuards = Arr::where(config('filament-2fa.banner.auth_guards'), fn (array $value, string $key) => (bool)$value['can_see_banner'] === true);
         [$keys, $values] = Arr::divide($filteredGuards);
         return array_combine(array_values($keys),array_values($keys));
     }
-
-    private function defaultBanner()
-    {
-        return [
-            'name' => 'Two Factor Authentication - Alert',
-            'content' => '',
-            'is_active' => true,
-            'active_since' => null,
-            'icon' => 'heroicon-m-megaphone',
-            'background_type' => 'gradient',
-            'start_color' => '#FF6B6B',
-            'end_color' => '#FFD97D',
-            'start_time' => null,
-            'end_time' => null,
-            'can_be_closed_by_user' => true,
-            'text_color' => '#333333',
-            'icon_color' => '#FFFFFF',
-            'render_location' => PanelsRenderHook::BODY_START,
-            'scope' => [],
-            'auth_guards' => []
-        ];
-    }
-
 }

@@ -37,5 +37,21 @@ return [
         ]
     ],
 
-    '2fa_banner_url' => 'two-factor-banner'
+    'banner' => [        
+        'auth_guards' => [
+            'web' => [
+                'can_manage' => true,
+                'can_see_banner' => true,
+            ]
+        ],
+        'navigation' => [
+            'icon' => 'heroicon-m-megaphone',
+            'label' => '2FA Banners',
+            'url' => 'two-factor-banner'
+        ],
+        'excluded_routes' => [
+            'two-factor-authentication',
+            'confirm-2fa',
+        ]
+    ]
 ];
