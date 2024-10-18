@@ -82,7 +82,7 @@ public function panel(Panel $panel): Panel
 
 ### Step 3:
 
-Add TwoFactor Login class on PanelServiceProvider
+Remember to add the *Setup Two Factor Authentication* and *Banner Notification" pages*, as well as the *TwoFactor Login* class on the PanelServiceProvider.
 
 ```php
 use Optimacloud\Filament2fa\Filament\Pages\Login;
@@ -96,6 +96,19 @@ public function panel(Panel $panel): Panel
             TwoFactorPlugin::make()
         ])
         ->login(Login::class)
+        ->userMenuItems([
+            MenuItem::make('two-factor')
+                ->url('/two-factor-authentication')
+                ->label('Two Factor Auth')
+                ->icon('heroicon-o-key')
+                ->sort(1),
+            MenuItem::make('two-factor-banner')
+                ->url(config('filament-2fa.banner.navigation.url'))
+                ->label(config('filament-2fa.banner.navigation.label'))
+                ->icon(config('filament-2fa.banner.navigation.icon'))
+                ->sort(2)
+                ->visible(config('filament-2fa.banner.auth_guards.admin.can_manage')),
+        ])
 }
 ```
 
@@ -104,17 +117,70 @@ public function panel(Panel $panel): Panel
 Can enable or disable TwoFactor in filament-2fa.php config file
 
 ```php
+use Filament\Pages\SubNavigationPosition;
 return [
+    'defaultDateTimeDisplayFormat'  => 'd M Y H:i',
+
+    'exclude_routes' => [
+        'two-factor-authentication',
+        'confirm-2fa',
+        'logout',
+    ],
+
+    'login' => [
+        'flashLoginCredentials' => false,
+        'credential_key' => '_2fa_login',
+        'confirm_totp_page_url' => 'confirm-2fa'
+    ],
+
+    'navigation' => [
+        'visible_on_navbar' => true,
+        'icon' => 'heroicon-o-key',
+        'group' => 'Auth Security',
+        'label' => 'Two Factor Auth',
+        'cluster' => null,
+        'sort_no' => 10,
+        'subnav_position' => SubNavigationPosition::Top
+    ],
+
     'auth_guards' => [
         'web' => [
             'enabled' => 'true', 
             'mandatory' => false
         ]
+    ],
+
+    'banner' => [        
+        'auth_guards' => [
+            'web' => [
+                'can_manage' => true,
+                'can_see_banner' => true,
+            ]
+        ],
+        'navigation' => [
+            'icon' => 'heroicon-m-megaphone',
+            'label' => '2FA Banners',
+            'url' => 'two-factor-banner'
+        ],
+        'excluded_routes' => [
+            'two-factor-authentication',
+            'confirm-2fa',
+        ]
     ]
 ];
 ```
 
+### Middleware
+```
+1. RedirectIfTwoFactorNotActivated.php
+2. SetRenderLocation.php
+```
+If the mandatory authentication guard user has not set up 2FA, they will be redirected to the two-factor authentication setup page by the **RedirectIfTwoFactorNotActivated** middleware.
 
+The **SetRenderLocation** middleware will display a notification banner on a page to remind to enable 2FAThe SetRenderLocationmiddleware will display a notification banner on a page to remind users to enable 2FA.
+
+### 2FA Notification Banner
+In the configuration, if the auth guard is enabled to manage the banner, the user can create, edit, delete, and enable/disable the banner. 
 
 ## Testing
 
