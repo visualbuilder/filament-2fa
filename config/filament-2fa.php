@@ -9,8 +9,8 @@ return [
      * When two factor is required exclude these routes from redirect
      */
     'exclude_routes' => [
-        '2fa.register.setup',
-        '2fa.register',
+        'two-factor-authentication',
+        'confirm-2fa',
         'logout',
     ],
 

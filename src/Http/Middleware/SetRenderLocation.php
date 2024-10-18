@@ -17,7 +17,7 @@ class SetRenderLocation
         
         if($banners->count() > 0) {
             foreach ($banners as $banner) {                
-                if ($banner->isVisible() && $this->checkAuthGuardsAndRoutes() && $banner->checkGuard()) {
+                if ($banner->isVisible() && $this->checkAuthGuardsAndRoutes($request) && $banner->checkGuard()) {
                     FilamentView::registerRenderHook(
                         $banner->render_location,
                         fn () => view('filament-2fa::components.banner', ['banner' => $banner]),
@@ -30,12 +30,12 @@ class SetRenderLocation
         return $next($request);
     }
 
-    private function checkAuthGuardsAndRoutes()
+    private function checkAuthGuardsAndRoutes($request)
     {
         $authGuards = config('filament-2fa.banner.auth_guards');
         return Filament::auth()->user() && 
-            isset($authGuards[Filament::getAuthGuard()]) && 
+            Arr::has($authGuards, Filament::getAuthGuard()) && 
             $authGuards[Filament::getAuthGuard()]['can_see_banner'] && 
-            (!in_array(Route::current()->uri, config('filament-2fa.banner.excluded_routes')));
+            !$request->is(...config('filament-2fa.banner.exclude_routes'));
     }
 }

@@ -60,7 +60,7 @@ class TwoFactorPlugin implements Plugin
 
         $panel->middleware([
             AuthenticateSession::class,
-            // RedirectIfTwoFactorNotActivated::class,
+            RedirectIfTwoFactorNotActivated::class,
             SetRenderLocation::class,
         ], true);
 
