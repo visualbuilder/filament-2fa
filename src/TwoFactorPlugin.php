@@ -55,7 +55,7 @@ class TwoFactorPlugin implements Plugin
         ]);
 
         $panel->resources([
-            
+            TwoFactorBannerResource::class 
         ]);
 
         $panel->middleware([
