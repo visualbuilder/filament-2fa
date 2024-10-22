@@ -1,6 +1,8 @@
 <?php
 
+use Filament\Actions\DeleteAction;
 use Filament\Facades\Filament;
+use Filament\Tables\Actions\DeleteBulkAction;
 use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource;
 use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\CreateTwoFactorBanner;
 use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\EditTwoFactorBanner;
@@ -117,4 +119,53 @@ it('can update banner', function () {
         'render_location' => $banner->render_location,
         'is_active' => $banner->is_active,
     ]);
+});
+
+it('can delete banner', function () {
+    $banner = TwoFactorBanner::factory()->create();
+
+    livewire(EditTwoFactorBanner::class, [
+        'record' => $banner->getRouteKey(),
+    ])->callAction(DeleteAction::class);
+
+    $this->assertModelMissing($banner);
+});
+
+it('can delete multiple banners', function () {
+    $banners = TwoFactorBanner::factory()->count(4)->create();
+
+    livewire(ListTwoFactorBanners::class)
+        ->callTableBulkAction(DeleteBulkAction::class, $banners->pluck('id')->toArray());
+
+    foreach ($banners as $banner) {
+        $this->assertModelMissing($banner);
+    }
+});
+
+it('can disable multiple banners', function () {
+    $banners = TwoFactorBanner::factory()->count(4)->create();
+
+    livewire(ListTwoFactorBanners::class)
+        ->callTableBulkAction('disableSelected', $banners->pluck('id')->toArray());
+
+    foreach ($banners as $banner) {
+        $this->assertDatabaseHas(TwoFactorBanner::class, [
+            'id' => $banner->id,
+            'is_active' => false,
+        ]);
+    }
+});
+
+it('can enable multiple banners', function () {
+    $banners = TwoFactorBanner::factory()->count(4)->create();
+
+    livewire(ListTwoFactorBanners::class)
+        ->callTableBulkAction('enableSelected', $banners->pluck('id')->toArray());
+
+    foreach ($banners as $banner) {
+        $this->assertDatabaseHas(TwoFactorBanner::class, [
+            'id' => $banner->id,
+            'is_active' => true,
+        ]);
+    }
 });

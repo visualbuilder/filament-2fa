@@ -25,6 +25,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -38,6 +39,26 @@ class TwoFactorBannerResource extends Resource
     protected static ?string $model = TwoFactorBanner::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
+    public static function getSlug(): string
+    {
+        return config('filament-2fa.banner.navigation.url');
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false;
+    }
+
+    public static function getNavigationIcon(): string|Htmlable|null
+    {
+        return config('filament-2fa.banner.navigation.icon');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return config('filament-2fa.banner.navigation.label');
+    }
 
     public static function form(Form $form): Form
     {
@@ -182,12 +203,12 @@ class TwoFactorBannerResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('disableSelcted')
+                    Tables\Actions\BulkAction::make('disableSelected')
                         ->color('warning')
                         ->icon('heroicon-m-x-circle')
                         ->requiresConfirmation()
                         ->action(fn (Collection $records) => $records->each->update(['is_active' => false])),
-                    Tables\Actions\BulkAction::make('enableSelcted')
+                    Tables\Actions\BulkAction::make('enableSelected')
                         ->color('success')
                         ->icon('heroicon-m-check-badge')
                         ->requiresConfirmation()

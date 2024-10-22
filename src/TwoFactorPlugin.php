@@ -69,8 +69,7 @@ class TwoFactorPlugin implements Plugin
         ]);
 
         $panel->widgets([
-            Confirm2Fa::class,
-            Banner::class
+            Confirm2Fa::class
         ]);
     }
 
