@@ -6,13 +6,10 @@ use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Illuminate\Session\Middleware\AuthenticateSession;
-use Illuminate\Session\Middleware\StartSession;
 use Optimacloud\Filament2fa\Filament\Pages\Configure;
 use Optimacloud\Filament2fa\Http\Middleware\RedirectIfTwoFactorNotActivated;
 use Optimacloud\Filament2fa\Http\Middleware\SetRenderLocation;
-use Optimacloud\Filament2fa\Livewire\Banner;
 use Optimacloud\Filament2fa\Livewire\Confirm2Fa;
-use Optimacloud\Filament2fa\Livewire\TwoFactorBanner;
 
 class TwoFactorPlugin implements Plugin
 {
