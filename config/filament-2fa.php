@@ -46,7 +46,7 @@ return [
         ],
         'navigation' => [
             'icon' => 'heroicon-m-megaphone',
-            'label' => '2FA Banners',
+            'label' => 'Banners',
             'url' => 'two-factor-banner'
         ],
         'excluded_routes' => [

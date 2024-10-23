@@ -14,7 +14,7 @@ class SetRenderLocation
         $banners = TwoFactorBanner::get();        
         if($this->checkRoutes($request) && $banners->count() > 0) {
             foreach ($banners as $banner) {                
-                if ($banner->isVisible() && $this->checkAuthGuards($request) && $banner->checkGuard()) {
+                if ($banner->isVisible() && $banner->validateIs2FaBanner($request) && $banner->checkGuard() && $this->checkCurrentAuth()) {
                     FilamentView::registerRenderHook(
                         $banner->render_location,
                         fn () => view('filament-2fa::components.banner-render', ['banner' => $banner]),
@@ -25,9 +25,9 @@ class SetRenderLocation
         }
 
         return $next($request);
-    }
+    }    
 
-    private function checkAuthGuards($request)
+    private function checkCurrentAuth()
     {
         $authGuards = config('filament-2fa.banner.auth_guards');
         return Filament::auth()->user() && 

@@ -7,6 +7,7 @@ use Filament\Facades\Filament;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Laragear\TwoFactor\Contracts\TwoFactorAuthenticatable;
 use Optimacloud\Filament2fa\Database\Factories\TwoFactorBannerFactory;
 
 class TwoFactorBanner extends Model
@@ -114,6 +115,18 @@ class TwoFactorBanner extends Model
             PanelsRenderHook::GLOBAL_SEARCH_BEFORE, PanelsRenderHook::GLOBAL_SEARCH_AFTER => 'global_search',
             default => ''
         };
+    }
+
+    public function validateIs2FaBanner($request)
+    {
+        $user = $request->user();
+        return (!$this->is_2fa_setup 
+            || (
+                $this->is_2fa_setup 
+                && $user instanceof TwoFactorAuthenticatable 
+                && !$user->hasTwoFactorEnabled()
+            )
+        );
     }
 
     public function checkGuard()
