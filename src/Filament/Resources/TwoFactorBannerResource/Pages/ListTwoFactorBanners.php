@@ -11,6 +11,7 @@ class ListTwoFactorBanners extends ListRecords
 {
     protected static string $resource = TwoFactorBannerResource::class;
 
+
     protected function getHeaderActions(): array
     {
         return [
@@ -22,7 +23,7 @@ class ListTwoFactorBanners extends ListRecords
     {
         return [
             'hasTopbar' => true,
-            'maxWidth' => MaxWidth::SixExtraLarge,
+            'maxWidth' => MaxWidth::SevenExtraLarge,
         ];
     }
 

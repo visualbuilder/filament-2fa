@@ -32,12 +32,12 @@ return [
 
     'auth_guards' => [
         'web' => [
-            'enabled' => 'true', 
+            'enabled' => 'true',
             'mandatory' => false
         ]
     ],
 
-    'banner' => [        
+    'banner' => [
         'auth_guards' => [
             'web' => [
                 'can_manage' => true,
@@ -47,7 +47,7 @@ return [
         'navigation' => [
             'icon' => 'heroicon-m-megaphone',
             'label' => 'Banners',
-            'url' => 'two-factor-banner'
+            'url' => 'banner-manager'
         ],
         'excluded_routes' => [
             'two-factor-authentication',
