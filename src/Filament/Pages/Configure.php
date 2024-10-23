@@ -195,6 +195,8 @@ class Configure extends EditProfile
     protected function getTwoFactorAuthFormComponent(): Component
     {
         return Section::make(__('filament-2fa::two-factor.profile_title'))
+            ->icon('heroicon-o-shield-check')
+            ->iconColor('success')
             ->relationship('twoFactorAuth')
             ->schema([
                 $this->enable2FactorAuthGroupComponent(),
@@ -208,28 +210,52 @@ class Configure extends EditProfile
             ->schema([
                 Placeholder::make('2fa_info')
                     ->label(__('filament-2fa::two-factor.setup_title'))
-                    ->content(new HtmlString('<p class="text-justify">' . __('filament-2fa::two-factor.setup_message_1') . '</p>
-<p class="text-justify">' . __('filament-2fa::two-factor.setup_message_2') . '</p>')),
+                    ->content(new HtmlString('<p class="text-justify">' . __('filament-2fa::two-factor.setup_message_1', ['interval' => config('two-factor.totp.seconds')]) . '</p>
+                <p class="text-justify">' . __('filament-2fa::two-factor.setup_message_2') . '</p>')),
 
                 Group::make()
                     ->schema([
-                        Placeholder::make('step1')
-                            ->label(__('filament-2fa::two-factor.setup_step_1')),
-                        Placeholder::make('step2')
-                            ->label(__('filament-2fa::two-factor.setup_step_2')),
-                        ViewField::make('2fa_auth')
-                            ->view('filament-2fa::forms.components.2fa-settings')
-                            ->viewData($this->prepareTwoFactor()),
-                        TextInput::make('2fa_code')
-                            ->label(__('filament-2fa::two-factor.confirm'))
-                            ->numeric()
-                            ->required(!$this->getUser()->hasTwoFactorEnabled())
-                            ->minLength(6)
-                            ->maxLength(6)
-                            ->autocomplete(false)
-                            ->afterStateUpdated(fn($state) => $this->data['2fa_code'] = $state),
-                    ])->columns(2)
+                        // Step 1 - Left Column
+                        Group::make()
+                            ->schema([
+                                Placeholder::make('step1')
+                                    ->label(false)
+                                    ->content(fn () => new HtmlString('<h3 class="text-lg font-bold text-primary">' . __('filament-2fa::two-factor.setup_step_1') . '</h3>')),
+                                ViewField::make('2fa_auth')
+                                    ->view('filament-2fa::forms.components.2fa-settings')
+                                    ->viewData($this->prepareTwoFactor()),
+                            ])
+                            ->columnSpan([
+                                'sm' => 2, // Full-width on small screens
+                                'md' => 1, // Half-width on medium and larger screens
+                            ]),
+
+                        // Step 2 and Confirm - Right Column
+                        Group::make()
+                            ->schema([
+                                Placeholder::make('step2')
+                                    ->label(false)
+                                    ->content(fn () => new HtmlString('<h3 class="text-lg font-bold text-primary">' . __('filament-2fa::two-factor.setup_step_2') . '</h3>')),
+                                TextInput::make('2fa_code')
+                                    ->label(__('filament-2fa::two-factor.confirm'))
+                                    ->numeric()
+                                    ->required(!$this->getUser()->hasTwoFactorEnabled())
+                                    ->minLength(6)
+                                    ->maxLength(6)
+                                    ->autocomplete(false)
+                                    ->afterStateUpdated(fn ($state) => $this->data['2fa_code'] = $state),
+                            ])
+                            ->columnSpan([
+                                'sm' => 2, // Full-width on small screens
+                                'md' => 1, // Half-width on medium and larger screens
+                            ]),
+                    ])
+                    ->columns([
+                        'sm' => 1, // Single column on small screens
+                        'md' => 2, // Two columns on medium and larger screens
+                    ])
             ])->visible(!$this->getUser()->hasTwoFactorEnabled());
+
     }
 
     protected function prepareTwoFactor(): array

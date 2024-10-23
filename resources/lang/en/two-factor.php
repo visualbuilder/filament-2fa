@@ -50,8 +50,8 @@ return [
 
     'action_label'  => 'Submit OTP Pin and complete setup',
 
-    'setup_message_1' => 'When two factor authentication is enabled, you will prompted for a secure pin during login. Your phone\'s authenticator application will provide a new pin every 60 seconds',
-    'setup_message_2' => 'To enable 2FA scan the following QR code using your phone\'s authenticator application and enter the OTP code to confirm setup.',
+    'setup_message_1' => 'When two factor authentication is enabled, you will prompted for a secure pin during login. Your phone\'s authenticator application will provide a new pin every :interval seconds.',
+    'setup_message_2' => 'To enable 2FA, scan the following QR code using an authenticator app on your phone (such as Google Authenticator, Microsoft Authenticator, Authy, or LastPass Authenticator). Then, enter the one-time passcode (OTP) to confirm the setup.',
 
     'recovery_instruction' => 'Save these recovery codes in a safe place. Each code can be used once to recover your account if your two factor authentication device is lost.'
 ];
