@@ -194,9 +194,9 @@ class TwoFactorBannerResource extends Resource
                 TextColumn::make('auth_guards')->searchable(),
                 TextColumn::make('render_location')
                     ->formatStateUsing(fn (string $state): string => self::renderLocations($state) ),
-                IconColumn::make('can_be_closed_by_user'),
-                IconColumn::make('is_2fa_setup')->label('2FA Banner'),
-                IconColumn::make('is_active')
+                IconColumn::make('can_be_closed_by_user')->label('Dismissable')->alignCenter(),
+                IconColumn::make('is_2fa_setup')->label('2FA Banner')->alignCenter(),
+                IconColumn::make('is_active')->alignCenter()
             ])
             ->filters([
                 //
