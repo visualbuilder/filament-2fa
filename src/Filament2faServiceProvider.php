@@ -37,6 +37,7 @@ class Filament2faServiceProvider extends PackageServiceProvider
         if ($this->app->runningInConsole()) {
             $this->publishMigrations();
             $this->publishConfigs();
+            $this->publishSeeders();
         }
 
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'filament-2fa');
@@ -51,6 +52,13 @@ class Filament2faServiceProvider extends PackageServiceProvider
                     ->toString(),
             ]);
         $this->publishes($files->toArray(), 'filament-2fa-migrations');
+    }
+
+    protected function publishSeeders()
+    {
+        $this->publishes([
+            __DIR__ . '/../database/seeders/TwoFactorBannerSeeder.php' => database_path('seeders/TwoFactorBannerSeeder.php'),
+        ], 'filament-2fa-seeders');
     }
 
     protected function publishConfigs()

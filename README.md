@@ -24,6 +24,13 @@ php artisan vendor:publish --tag="filament-2fa-migrations"
 php artisan migrate
 ```
 
+A Banner Seeder adds a configurable Setup 2FA banner shown to users who are not setup yet
+
+```bash
+php artisan vendor:publish --tag="filament-2fa-seeders"
+php artisan db:seed --class=TwoFactorBannerSeeder
+```
+
 You can publish the config file with:
 
 ```bash

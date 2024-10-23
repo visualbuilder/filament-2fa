@@ -22,6 +22,7 @@ class TwoFactorBanner extends Model
         'can_be_closed_by_user',
         'can_truncate_message',
         'is_active',
+        'is_2fa_setup',
         'active_since',
         'text_color',
         'icon',
@@ -30,11 +31,12 @@ class TwoFactorBanner extends Model
         'start_color',
         'end_color',
         'start_time',
-        'end_time',        
+        'end_time',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'is_2fa_setup' => 'boolean',
         'can_be_closed_by_user' => 'boolean',
         'can_truncate_message' => 'boolean',
         'scope' => 'array',

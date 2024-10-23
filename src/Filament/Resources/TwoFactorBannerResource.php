@@ -76,7 +76,7 @@ class TwoFactorBannerResource extends Resource
                                     ->multiple()
                                     ->hintAction(ComponentAction::make('help')
                                         ->icon('heroicon-o-question-mark-circle')
-                                        ->extraAttributes(['class' => 'text-gray-500'])                                    
+                                        ->extraAttributes(['class' => 'text-gray-500'])
                                         ->tooltip('This banner only visible on selected Auth Panels(guards)'))
                                     ->options(self::getAuthGuards()),
                                 RichEditor::make('content')
@@ -97,9 +97,9 @@ class TwoFactorBannerResource extends Resource
                                         ->icon('heroicon-o-question-mark-circle')
                                         ->extraAttributes(['class' => 'text-gray-500'])
                                         ->label('')
-                                        ->tooltip('With render location, you can select where a banner is rendered on the page. In combination with scopes, this becomes a powerful tool to manage where and when your banners are displayed. You can choose to render banners in the header, sidebar, or other strategic locations to maximize their visibility and impact.'))                                
+                                        ->tooltip('With render location, you can select where a banner is rendered on the page. In combination with scopes, this becomes a powerful tool to manage where and when your banners are displayed. You can choose to render banners in the header, sidebar, or other strategic locations to maximize their visibility and impact.'))
                                     ->options(self::renderLocations()),
-    
+
                                 Select::make('scope')
                                     ->hintAction(ComponentAction::make('help')
                                         ->icon('heroicon-o-question-mark-circle')
@@ -111,9 +111,14 @@ class TwoFactorBannerResource extends Resource
                                     ->options(fn () => self::getScopes()),
                                 Fieldset::make('Options')
                                     ->schema([
+                                        Checkbox::make('is_2fa_setup')
+                                            ->label('Show when 2fa is optional and not setup yet')
+                                            ->columnSpan('full'),
                                         Checkbox::make('can_be_closed_by_user')
+                                            ->label('User can dismiss banner')
                                             ->columnSpan('full'),
                                         Checkbox::make('can_truncate_message')
+                                            ->label('Allow long messages to be truncated to fit on a small screen')
                                             ->columnSpan('full'),
                                     ]),
                                 Toggle::make('is_active'),
@@ -121,7 +126,7 @@ class TwoFactorBannerResource extends Resource
                         Tab::make('Styling')
                             ->icon('heroicon-m-paint-brush')
                             ->schema([
-                                ColorPicker::make('text_color')                                
+                                ColorPicker::make('text_color')
                                     ->default('#FFFFFF')
                                     ->required(),
                                 Fieldset::make('Icon')
@@ -157,7 +162,7 @@ class TwoFactorBannerResource extends Resource
                             ->reactive()
                             ->icon('heroicon-m-clock')
                             ->badgeIcon('heroicon-m-eye')
-                            ->badge(fn ($get) => $this->calculateScheduleStatus($get('start_time'), $get('end_time')))
+                            ->badge(fn ($get) => self::calculateScheduleStatus($get('start_time'), $get('end_time')))
                             ->schema([
                                 DateTimePicker::make('start_time')
                                     ->hintAction(
@@ -175,7 +180,7 @@ class TwoFactorBannerResource extends Resource
                                                 $set('end_time', null);
                                             })
                                     ),
-                            ])->hidden(true),
+                            ])->hidden(false),
                     ])->contained(false),
                 ])
             ]);
@@ -190,7 +195,7 @@ class TwoFactorBannerResource extends Resource
                 TextColumn::make('render_location')
                     ->formatStateUsing(fn (string $state): string => self::renderLocations($state) ),
                 IconColumn::make('can_be_closed_by_user'),
-                IconColumn::make('can_truncate_message'),
+                IconColumn::make('is_2fa_setup')->label('2FA Banner'),
                 IconColumn::make('is_active')
             ])
             ->filters([
@@ -326,7 +331,7 @@ class TwoFactorBannerResource extends Resource
     }
 
     private static function renderLocations($location = null)
-    {        
+    {
         $locations = [
             'Panel' => [
                 PanelsRenderHook::BODY_START => 'Header',

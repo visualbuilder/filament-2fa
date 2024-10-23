@@ -21,6 +21,7 @@ class TwoFactorBannerFactory extends Factory
             'can_be_closed_by_user' => false,
             'can_truncate_message' => false,
             'is_active' => true,
+            'is_2fa_setup'=>true,
             'active_since' => now(),
             'text_color' => "#FF0000",
             'icon' => "academic-cap",
@@ -29,7 +30,7 @@ class TwoFactorBannerFactory extends Factory
             'start_color' => "#FF0000",
             'end_color' => null,
             'start_time' => null,
-            'end_time' => null,  
+            'end_time' => null,
         ];
     }
 }

@@ -48,11 +48,11 @@ class TwoFactorPlugin implements Plugin
         ]);
 
         $panel->plugins([
-            
+
         ]);
 
         $panel->resources([
-            TwoFactorBannerResource::class 
+            TwoFactorBannerResource::class
         ]);
 
         $panel->middleware([
@@ -72,9 +72,6 @@ class TwoFactorPlugin implements Plugin
 
     public function boot(Panel $panel): void
     {
-        /**
-         * This should be in middleware
-         */
-        //TwoFactorHelper::validateAuthModel();
+
     }
 }
