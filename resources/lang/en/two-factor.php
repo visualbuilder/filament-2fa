@@ -20,7 +20,7 @@ return [
     'totp_or_recovery_code'   => 'One time Pin or Recovery code',
     'confirm_otp_hint'  => 'An OTP should have :otpLength digits, while a recovery code can be alphanumeric and should be :recoveryLength characters.',
     'one_time_pin'   => 'One Time Pin',
-    'enable_safe_device'   => 'Enable safe device',
+    'enable_safe_device'   => 'Remember this device for :days days',
     'confirm'   => 'Confirm code',
     'enabled_at' => 'Enabled at',
     'switch_on' => 'Go to enable Two-Factor Authentication.',

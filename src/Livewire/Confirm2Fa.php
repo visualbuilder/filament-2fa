@@ -146,7 +146,7 @@ class Confirm2Fa extends SimplePage implements HasForms
                     ->required()
                     ->autocomplete(false),
                 Toggle::make('safe_device_enable')
-                    ->label(__('filament-2fa::two-factor.enable_safe_device'))
+                    ->label(__('filament-2fa::two-factor.enable_safe_device',['days' => config('two-factor.safe_devices.expiration_days')]))
                     ->inline(false)
                     ->onColor('success')
                     ->offColor('danger')
