@@ -56,22 +56,22 @@
             style="background-color: {{ $banner->start_color }}; background-image: linear-gradient(to right, {{ $start_color }}, {{ $end_color }}) ;color: {{ $banner->text_color ?? '#FFFFFF' }};"
             id="{{ $banner->id }}"
             @class([
-               'grid grid-cols-12 py-2 px-3 relative',
+               'grid grid-cols-12 py-3 px-3 relative',
                'rounded-lg' => $banner->render_location !== \Filament\View\PanelsRenderHook::BODY_START,
                'mt-3' => $banner->render_location !== \Filament\View\PanelsRenderHook::BODY_START
             ])>
             <div class="col-span-11 flex items-center mx-3">
-                <div class="p-4 ">
-                    @if ($banner->icon)
+                @if ($banner->icon)
+                    <div class="p-3 flex items-center">
                         <x-filament::icon
                             alias="banner::close"
                             :icon="$banner->icon"
                             style="color: {{ $banner->icon_color ?? '#FFFFFF' }}"
                             class="h-6 w-6 mr-2 text-gray-500 dark:text-gray-400 text-white"
                         />
-                    @endif
-                </div>
-                <div>
+                    </div>
+                @endif
+                <div class="flex items-center">
                     {!! $banner->content !!}
                 </div>
             </div>
