@@ -1,10 +1,10 @@
 <?php
 
-namespace Optimacloud\Filament2fa;
+namespace Visualbuilder\Filament2fa;
 
 use Exception;
 use Filament\Facades\Filament;
-use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
+use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
 
 class TwoFactorHelper
 {

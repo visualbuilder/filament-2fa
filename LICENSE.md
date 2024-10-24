@@ -1,6 +1,6 @@
 The MIT License (MIT)
 
-Copyright (c) Optima Cloud <lee@optimacloud.pro>
+Copyright (c) Visual Builder <lee@visualbuilder.pro>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Filament\Pages;
+namespace Visualbuilder\Filament2fa\Filament\Pages;
 
 use Exception;
 use Filament\Forms\Components\Actions;
@@ -26,7 +26,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
-use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
+use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
 
 use function Filament\Support\is_app_url;
 

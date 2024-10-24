@@ -1,8 +1,8 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages;
+namespace Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages;
 
-use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource;
+use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Enums\MaxWidth;

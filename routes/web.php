@@ -1,6 +1,6 @@
 <?php
 
-use Optimacloud\Filament2fa\Livewire\Confirm2Fa;
+use Visualbuilder\Filament2fa\Livewire\Confirm2Fa;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Traits;
+namespace Visualbuilder\Filament2fa\Traits;
 
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Laragear\TwoFactor\Contracts\TwoFactorTotp;

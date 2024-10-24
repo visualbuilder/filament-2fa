@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimacloud\Filament2fa;
+namespace Visualbuilder\Filament2fa;
 
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;

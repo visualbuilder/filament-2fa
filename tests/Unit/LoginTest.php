@@ -2,7 +2,7 @@
 
 use Filament\Facades\Filament;
 use Laragear\TwoFactor\Models\TwoFactorAuthentication;
-use Optimacloud\Filament2fa\Filament\Pages\Login;
+use Visualbuilder\Filament2fa\Filament\Pages\Login;
 
 use function Pest\Livewire\livewire;
 

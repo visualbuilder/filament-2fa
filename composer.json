@@ -1,21 +1,21 @@
 {
-    "name": "optimacloud/filament-2fa",
+    "name": "visualbuilder/filament-2fa",
     "description": "Two Factor Auth for filament",
     "keywords": [
-        "Optima Cloud",
+        "Visual Builder",
         "laravel",
         "filament-2fa"
     ],
-    "homepage": "https://github.com/optimacloud/filament-2fa",
+    "homepage": "https://github.com/visualbuilder/filament-2fa",
     "support": {
-        "issues": "https://github.com/optimacloud/filament-2fa/issues",
-        "source": "https://github.com/optimacloud/filament-2fa"
+        "issues": "https://github.com/visualbuilder/filament-2fa/issues",
+        "source": "https://github.com/visualbuilder/filament-2fa"
     },
     "license": "MIT",
     "authors": [
         {
-            "name": "Lee Evans",
-            "email": "lee@optimacloud.pro",
+            "name": "Visual Builder",
+            "email": "support@ekouk.com",
             "role": "Developer"
         }
     ],
@@ -35,14 +35,14 @@
     },
     "autoload": {
         "psr-4": {
-            "Optimacloud\\Filament2fa\\": "src/",
-            "Optimacloud\\Filament2fa\\Database\\Factories\\": "database/factories/",
-            "Optimacloud\\Filament2fa\\Database\\Migrations\\": "database/migrations/"
+            "Visualbuilder\\Filament2fa\\": "src/",
+            "Visualbuilder\\Filament2fa\\Database\\Factories\\": "database/factories/",
+            "Visualbuilder\\Filament2fa\\Database\\Migrations\\": "database/migrations/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Optimacloud\\Filament2fa\\Tests\\": "tests/"
+            "Visualbuilder\\Filament2fa\\Tests\\": "tests/"
         }
     },
     "scripts": {
@@ -60,10 +60,10 @@
     "extra": {
         "laravel": {
             "providers": [
-                "Optimacloud\\Filament2fa\\Filament2faServiceProvider"
+                "Visualbuilder\\Filament2fa\\Filament2faServiceProvider"
             ],
             "aliases": {
-                "Filament2fa": "Optimacloud\\Filament2fa\\Facades\\Filament2fa"
+                "Filament2fa": "Visualbuilder\\Filament2fa\\Facades\\Filament2fa"
             }
         }
     },

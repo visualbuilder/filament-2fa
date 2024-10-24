@@ -1,8 +1,8 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Filament\Resources;
+namespace Visualbuilder\Filament2fa\Filament\Resources;
 
-use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages;
+use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages;
 use Filament\Forms;
 use Filament\Forms\Components\Actions\Action as ComponentAction;
 use Filament\Facades\Filament;
@@ -31,8 +31,8 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
-use Optimacloud\Filament2fa\Enums\ScheduleStatus;
-use Optimacloud\Filament2fa\Models\TwoFactorBanner;
+use Visualbuilder\Filament2fa\Enums\ScheduleStatus;
+use Visualbuilder\Filament2fa\Models\TwoFactorBanner;
 
 class TwoFactorBannerResource extends Resource
 {

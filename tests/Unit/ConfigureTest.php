@@ -1,6 +1,6 @@
 <?php
 
-use Optimacloud\Filament2fa\Filament\Pages\Configure;
+use Visualbuilder\Filament2fa\Filament\Pages\Configure;
 use Laragear\TwoFactor\Models\TwoFactorAuthentication;
 use function Pest\Livewire\livewire;
 
@@ -14,7 +14,7 @@ it('can see 2fa confirm code & validateion', function () {
     $user = $this->createUser();
     $this->actingAs($user);
     livewire(Configure::class)
-        ->refresh()        
+        ->refresh()
         ->assertFormExists()
         ->assertFormFieldExists('twoFactorAuth.2fa_code')
         ->fillForm([
@@ -26,7 +26,7 @@ it('can see 2fa confirm code & validateion', function () {
 
 it('can enable two factor authentication', function () {
     $user = $this->createUser();
-    $this->actingAs($user);        
+    $this->actingAs($user);
     $user->twoFactorAuth()->save(
         TwoFactorAuthentication::factory()->make()
     );
@@ -42,7 +42,7 @@ it('can disable two factor authentication', function () {
     expect($user->hasTwoFactorEnabled())->toBeTrue();
     livewire(Configure::class)
         ->refresh()
-        ->assertFormExists()        
+        ->assertFormExists()
         ->fillForm([
             'disable_two_factor_auth' => true
         ])

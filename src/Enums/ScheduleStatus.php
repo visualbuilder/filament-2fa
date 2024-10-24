@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Enums;
+namespace Visualbuilder\Filament2fa\Enums;
 
 enum ScheduleStatus: string implements \Filament\Support\Contracts\HasLabel
 {

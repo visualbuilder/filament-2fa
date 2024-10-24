@@ -1,6 +1,6 @@
 <?php
 
-use Optimacloud\Filament2fa\Tests\Models\User;
+use Visualbuilder\Filament2fa\Tests\Models\User;
 
 return [
     'two-factor' => [
@@ -49,7 +49,7 @@ return [
         ],
 
         'guards' => [
-            
+
             'web' => [
                 'driver' => 'session',
                 'provider' => 'users',

@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Tests;
+namespace Visualbuilder\Filament2fa\Tests;
 
 use BladeUI\Heroicons\BladeHeroiconsServiceProvider;
 use BladeUI\Icons\BladeIconsServiceProvider;
@@ -18,8 +18,8 @@ use Illuminate\Support\Str;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as Orchestra;
 use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
-use Optimacloud\Filament2fa\Filament2faServiceProvider;
-use Optimacloud\Filament2fa\Tests\Models\User;
+use Visualbuilder\Filament2fa\Filament2faServiceProvider;
+use Visualbuilder\Filament2fa\Tests\Models\User;
 
 class TestCase extends Orchestra
 {
@@ -55,7 +55,7 @@ class TestCase extends Orchestra
     public function getEnvironmentSetUp($app)
     {
         $this->setupConfig();
-        
+
         $userMigration = include __DIR__.'/database/migrations/create_users_table.php';
         $userMigration->up();
 
@@ -64,7 +64,7 @@ class TestCase extends Orchestra
 
         $twoFactorMigration = include __DIR__.'/../vendor/laragear/two-factor/database/migrations/0000_00_00_000000_create_two_factor_authentications_table.php';
         $twoFactorMigration->up();
-        
+
     }
 
     protected function setupConfig()
@@ -75,7 +75,7 @@ class TestCase extends Orchestra
         config()->set('auth', $userMigration['auth']);
     }
 
-    public function createUser() 
+    public function createUser()
     {
         return User::create($this->credentials());
     }

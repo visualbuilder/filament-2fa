@@ -1,10 +1,10 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Database\Factories;
+namespace Visualbuilder\Filament2fa\Database\Factories;
 
 use Filament\View\PanelsRenderHook;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Optimacloud\Filament2fa\Models\TwoFactorBanner;
+use Visualbuilder\Filament2fa\Models\TwoFactorBanner;
 
 class TwoFactorBannerFactory extends Factory
 {

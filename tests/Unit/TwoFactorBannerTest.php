@@ -3,11 +3,11 @@
 use Filament\Actions\DeleteAction;
 use Filament\Facades\Filament;
 use Filament\Tables\Actions\DeleteBulkAction;
-use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource;
-use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\CreateTwoFactorBanner;
-use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\EditTwoFactorBanner;
-use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\ListTwoFactorBanners;
-use Optimacloud\Filament2fa\Models\TwoFactorBanner;
+use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource;
+use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\CreateTwoFactorBanner;
+use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\EditTwoFactorBanner;
+use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\ListTwoFactorBanners;
+use Visualbuilder\Filament2fa\Models\TwoFactorBanner;
 
 use function Pest\Livewire\livewire;
 
@@ -53,7 +53,7 @@ it('can create banner', function () {
             'start_color' => $banner->start_color,
             'end_color' => $banner->end_color,
             'start_time' => $banner->start_time,
-            'end_time' => $banner->end_time 
+            'end_time' => $banner->end_time
         ])
         ->call('create')
         ->assertHasNoFormErrors();
@@ -89,7 +89,7 @@ it('can access edit banner page', function () {
 it('can update banner', function () {
     $bannerNew = TwoFactorBanner::factory()->create();
     $banner = TwoFactorBanner::factory()->make();
-    
+
     $updatedData = livewire(EditTwoFactorBanner::class, [
         'record' => $bannerNew->getRouteKey(),
     ])->fillForm([
@@ -109,7 +109,7 @@ it('can update banner', function () {
         'start_color' => $banner->start_color,
         'end_color' => $banner->end_color,
         'start_time' => $banner->start_time,
-        'end_time' => $banner->end_time 
+        'end_time' => $banner->end_time
     ])
     ->call('save')
     ->assertHasNoFormErrors();

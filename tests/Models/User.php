@@ -1,19 +1,19 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Tests\Models;
+namespace Visualbuilder\Filament2fa\Tests\Models;
 
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
-use Optimacloud\Filament2fa\Traits\TwoFactorAuthentication;
+use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
+use Visualbuilder\Filament2fa\Traits\TwoFactorAuthentication;
 
 /**
  * @property string $email
  * @property string $name
  * @property string $password
  */
-class User extends Authenticatable implements FilamentUser, TwoFactorAuthenticatable 
+class User extends Authenticatable implements FilamentUser, TwoFactorAuthenticatable
 {
     use TwoFactorAuthentication;
 

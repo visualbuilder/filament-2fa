@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Livewire;
+namespace Visualbuilder\Filament2fa\Livewire;
 
 use Exception;
 use Filament\Facades\Filament;
@@ -17,7 +17,7 @@ use Filament\Pages\SimplePage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
-use Optimacloud\Filament2fa\FilamentTwoFactor;
+use Visualbuilder\Filament2fa\FilamentTwoFactor;
 
 class Confirm2Fa extends SimplePage implements HasForms
 {

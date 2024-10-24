@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimacloud\Filament2fa;
+namespace Visualbuilder\Filament2fa;
 
 use Closure;
 use Illuminate\Auth\Events\Authenticated;

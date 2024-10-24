@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Tests;
+namespace Visualbuilder\Filament2fa\Tests;
 
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -16,8 +16,8 @@ use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Optimacloud\Filament2fa\Filament\Pages\Configure;
-use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource;
+use Visualbuilder\Filament2fa\Filament\Pages\Configure;
+use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource;
 
 class UserPanelProvider extends PanelProvider
 {
@@ -33,7 +33,7 @@ class UserPanelProvider extends PanelProvider
             ->resources([
                 TwoFactorBannerResource::class
             ])
-            ->pages([                
+            ->pages([
                 Configure::class
             ])
             ->userMenuItems([

@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Filament\View\PanelsRenderHook;
 use Illuminate\Database\Seeder;
-use Optimacloud\Filament2fa\Models\TwoFactorBanner;
+use Visualbuilder\Filament2fa\Models\TwoFactorBanner;
 
 class TwoFactorBannerSeeder extends Seeder
 {

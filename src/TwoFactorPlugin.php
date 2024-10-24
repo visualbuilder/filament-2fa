@@ -1,15 +1,15 @@
 <?php
 
-namespace Optimacloud\Filament2fa;
+namespace Visualbuilder\Filament2fa;
 
-use Optimacloud\Filament2fa\Filament\Resources\TwoFactorBannerResource;
+use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Illuminate\Session\Middleware\AuthenticateSession;
-use Optimacloud\Filament2fa\Filament\Pages\Configure;
-use Optimacloud\Filament2fa\Http\Middleware\RedirectIfTwoFactorNotActivated;
-use Optimacloud\Filament2fa\Http\Middleware\SetRenderLocation;
-use Optimacloud\Filament2fa\Livewire\Confirm2Fa;
+use Visualbuilder\Filament2fa\Filament\Pages\Configure;
+use Visualbuilder\Filament2fa\Http\Middleware\RedirectIfTwoFactorNotActivated;
+use Visualbuilder\Filament2fa\Http\Middleware\SetRenderLocation;
+use Visualbuilder\Filament2fa\Livewire\Confirm2Fa;
 
 class TwoFactorPlugin implements Plugin
 {

@@ -1,20 +1,22 @@
 # Two Factor Auth for filament
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/optimacloud/filament-2fa.svg?style=flat-square)](https://packagist.org/packages/optimacloud/filament-2fa)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/optimacloud/filament-2fa/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/optimacloud/filament-2fa/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/optimacloud/filament-2fa/fix-php-code-styling.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/optimacloud/filament-2fa/actions?query=workflow%3A"Fix+PHP+code+styling"+branch%3Amain)
-[![Total Downloads](https://img.shields.io/packagist/dt/optimacloud/filament-2fa.svg?style=flat-square)](https://packagist.org/packages/optimacloud/filament-2fa)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/visualbuilder/filament-2fa.svg?style=flat-square)](https://packagist.org/packages/visualbuilder/filament-2fa)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/visualbuilder/filament-2fa/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/visualbuilder/filament-2fa/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/visualbuilder/filament-2fa/fix-php-code-styling.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/visualbuilder/filament-2fa/actions?query=workflow%3A"Fix+PHP+code+styling"+branch%3Amain)
+[![Total Downloads](https://img.shields.io/packagist/dt/visualbuilder/filament-2fa.svg?style=flat-square)](https://packagist.org/packages/visualbuilder/filament-2fa)
 
 
+Adds Two Factor authentication to Filament Panels. 
+Requires an app like Authy or Google Authenticator to generate One Time Pins every 60 seconds.
 
-This is where your description should go. Limit it to a paragraph or two. Consider adding a small example.
+
 
 ## Installation
 
 You can install the package via composer:
 
 ```bash
-composer require optimacloud/filament-2fa
+composer require visualbuilder/filament-2fa
 ```
 
 You can publish and run the migrations with:
@@ -25,45 +27,60 @@ php artisan migrate
 ```
 
 A Banner Seeder adds a configurable Setup 2FA banner shown to users who are not setup yet
-
 ```bash
 php artisan vendor:publish --tag="filament-2fa-seeders"
 php artisan db:seed --class=TwoFactorBannerSeeder
 ```
 
-You can publish the config file with:
-
+Publish the config files
 ```bash
 php artisan vendor:publish --tag="filament-2fa-config"
 ```
+This package extends the https://github.com/Laragear/TwoFactor
+so you will get two config files:-
+```bash
+config/two-factor.php
+config/filament-2fa.php
+```
+
+##Review the config files
+
+```php
+    /*
+    |--------------------------------------------------------------------------
+    | Safe Devices
+    |--------------------------------------------------------------------------
+    |
+    | Authenticating with Two-Factor Codes can become very obnoxious when the
+    | user does it every time. "Safe devices" allows to remember the device
+    | for a period of time which 2FA Codes won't be asked when login in.
+    |
+    */
+
+    'safe_devices' => [
+        'enabled' => true,
+        'cookie' => '_2fa_remember',
+        'max_devices' => 3,
+        'expiration_days' => 14,
+    ],
+```
 
 Optionally, you can publish the views using
-
 ```bash
 php artisan vendor:publish --tag="filament-2fa-views"
 ```
 
-This is the contents of the published config file:
-
-```php
-return [
-];
-```
 
 ## Usage
-
-```php
-$filament2fa = new Optimacloud\Filament2fa();
-echo $filament2fa->echoPhrase('Hello, Optimacloud!');
-```
+Minimal configuration required to enable 2FA on a panel.
 
 ### Step 1:
 
-Implement TwoFactorAuthenticatables on auth model
+Implement TwoFactorAuthenticatables on the authenticatable model
 
 ```php
-use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
-use Optimacloud\Filament2fa\Traits\TwoFactorAuthentication;
+use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
+use Visualbuilder\Filament2fa\Traits\TwoFactorAuthentication;
 
 class Admin extends Authenticatable implements FilamentUser, TwoFactorAuthenticatable
 {
@@ -89,10 +106,13 @@ public function panel(Panel $panel): Panel
 
 ### Step 3:
 
-Remember to add the *Setup Two Factor Authentication* and *Banner Notification" pages*, as well as the *TwoFactor Login* class on the PanelServiceProvider.
+Add menu items where required.
+For all users  *Setup Two Factor Authentication* link 
+For Admins only *Banner Manager pages*
+
 
 ```php
-use Optimacloud\Filament2fa\Filament\Pages\Login;
+use Visualbuilder\Filament2fa\Filament\Pages\Login;
 
 public function panel(Panel $panel): Panel
 {
@@ -104,11 +124,18 @@ public function panel(Panel $panel): Panel
         ])
         ->login(Login::class)
         ->userMenuItems([
+        /**
+        * All users page to configure their 2fa
+         */
             MenuItem::make('two-factor')
                 ->url('/two-factor-authentication')
                 ->label('Two Factor Auth')
                 ->icon('heroicon-o-key')
                 ->sort(1),
+                
+               /**
+                * This allows editing system wide banners - should only be available to admins 
+                 */
             MenuItem::make('two-factor-banner')
                 ->url(config('filament-2fa.banner.navigation.url'))
                 ->label(config('filament-2fa.banner.navigation.label'))

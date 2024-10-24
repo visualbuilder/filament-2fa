@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Models;
+namespace Visualbuilder\Filament2fa\Models;
 
 use Carbon\Carbon;
 use Filament\Facades\Filament;
@@ -8,7 +8,7 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laragear\TwoFactor\Contracts\TwoFactorAuthenticatable;
-use Optimacloud\Filament2fa\Database\Factories\TwoFactorBannerFactory;
+use Visualbuilder\Filament2fa\Database\Factories\TwoFactorBannerFactory;
 
 class TwoFactorBanner extends Model
 {
@@ -120,10 +120,10 @@ class TwoFactorBanner extends Model
     public function validateIs2FaBanner($request)
     {
         $user = $request->user();
-        return (!$this->is_2fa_setup 
+        return (!$this->is_2fa_setup
             || (
-                $this->is_2fa_setup 
-                && $user instanceof TwoFactorAuthenticatable 
+                $this->is_2fa_setup
+                && $user instanceof TwoFactorAuthenticatable
                 && !$user->hasTwoFactorEnabled()
             )
         );

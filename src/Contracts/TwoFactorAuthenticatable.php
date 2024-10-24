@@ -1,6 +1,6 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Contracts;
+namespace Visualbuilder\Filament2fa\Contracts;
 
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Laragear\TwoFactor\Contracts\TwoFactorAuthenticatable as BaseTwoFactorAuthenticatable;

@@ -1,14 +1,14 @@
 <?php
 
-namespace Optimacloud\Filament2fa\Filament\Pages;
+namespace Visualbuilder\Filament2fa\Filament\Pages;
 
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Facades\Filament;
 use Filament\Pages\Auth\Login as BaseLogin;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse;
 use Filament\Models\Contracts\FilamentUser;
-use Optimacloud\Filament2fa\TwoFactorAuthResponse;
-use Optimacloud\Filament2fa\Contracts\TwoFactorAuthenticatable;
+use Visualbuilder\Filament2fa\TwoFactorAuthResponse;
+use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
 use Illuminate\Support\Facades\Crypt;
 
 class Login extends BaseLogin
