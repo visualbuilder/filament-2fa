@@ -38,10 +38,10 @@ class UserPanelProvider extends PanelProvider
             ])
             ->userMenuItems([
                 MenuItem::make('two-factor')
-                    ->url('/two-factor-authentication')
-                    ->label('Two Factor Auth')
-                    ->icon('heroicon-o-key')
-                    ->sort(1),
+                    ->url(config('filament-2fa.navigation.url'))
+                    ->label(config('filament-2fa.navigation.label'))
+                    ->icon(config('filament-2fa.navigation.icon'))
+                    ->sort(config('filament-2fa.navigation.sort')),
             ])
             ->middleware([
                 EncryptCookies::class,

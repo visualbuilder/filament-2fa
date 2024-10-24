@@ -2,12 +2,11 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/visualbuilder/filament-2fa.svg?style=flat-square)](https://packagist.org/packages/visualbuilder/filament-2fa)
 [![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/visualbuilder/filament-2fa/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/visualbuilder/filament-2fa/actions?query=workflow%3Arun-tests+branch%3Amain)
-[![GitHub Code Style Action Status](https://img.shields.io/github/actions/workflow/status/visualbuilder/filament-2fa/fix-php-code-styling.yml?branch=main&label=code%20style&style=flat-square)](https://github.com/visualbuilder/filament-2fa/actions?query=workflow%3A"Fix+PHP+code+styling"+branch%3Amain)
 [![Total Downloads](https://img.shields.io/packagist/dt/visualbuilder/filament-2fa.svg?style=flat-square)](https://packagist.org/packages/visualbuilder/filament-2fa)
 
 
 Adds Two Factor authentication to Filament Panels. 
-Requires an app like Authy or Google Authenticator to generate One Time Pins every 60 seconds.
+Requires an app like Authy or Google Authenticator to generate Time-based One Time Pins every 60 seconds.
 
 
 
@@ -37,26 +36,18 @@ Publish the config files
 php artisan vendor:publish --tag="filament-2fa-config"
 ```
 This package extends the https://github.com/Laragear/TwoFactor
-so you will get two config files:-
+
+so you will see two new config files:-
 ```bash
 config/two-factor.php
 config/filament-2fa.php
 ```
 
-##Review the config files
+## Review the config files
+Set preferences for safe devices and recovery codes.
+
 
 ```php
-    /*
-    |--------------------------------------------------------------------------
-    | Safe Devices
-    |--------------------------------------------------------------------------
-    |
-    | Authenticating with Two-Factor Codes can become very obnoxious when the
-    | user does it every time. "Safe devices" allows to remember the device
-    | for a period of time which 2FA Codes won't be asked when login in.
-    |
-    */
-
     'safe_devices' => [
         'enabled' => true,
         'cookie' => '_2fa_remember',
@@ -64,6 +55,9 @@ config/filament-2fa.php
         'expiration_days' => 14,
     ],
 ```
+
+Note the  Two-Factor Login Helper is not used, there is a custom login form which you can extend
+
 
 Optionally, you can publish the views using
 ```bash
@@ -128,20 +122,21 @@ public function panel(Panel $panel): Panel
         * All users page to configure their 2fa
          */
             MenuItem::make('two-factor')
-                ->url('/two-factor-authentication')
-                ->label('Two Factor Auth')
-                ->icon('heroicon-o-key')
-                ->sort(1),
+                    ->url(config('filament-2fa.navigation.url'))
+                    ->label(config('filament-2fa.navigation.label'))
+                    ->icon(config('filament-2fa.navigation.icon'))
+                    ->sort(config('filament-2fa.navigation.sort')),
                 
-               /**
-                * This allows editing system wide banners - should only be available to admins 
-                 */
+           /**
+            * This allows editing system wide banners - should only be available to admins 
+            * May need to think about other logic to restrict access
+            */
             MenuItem::make('two-factor-banner')
                 ->url(config('filament-2fa.banner.navigation.url'))
                 ->label(config('filament-2fa.banner.navigation.label'))
                 ->icon(config('filament-2fa.banner.navigation.icon'))
-                ->sort(2)
-                ->visible(config('filament-2fa.banner.auth_guards.admin.can_manage')),
+                ->sort(config('filament-2fa.banner.navigation.sort')),
+                ->visible(config('filament-2fa.banner.auth_guards.web.can_manage')),
         ])
 }
 ```
@@ -194,7 +189,7 @@ return [
         'navigation' => [
             'icon' => 'heroicon-m-megaphone',
             'label' => '2FA Banners',
-            'url' => 'two-factor-banner'
+            'url' => 'banner-manager'
         ],
         'excluded_routes' => [
             'two-factor-authentication',

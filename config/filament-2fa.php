@@ -25,8 +25,9 @@ return [
         'icon' => 'heroicon-o-key',
         'group' => 'Auth Security',
         'label' => 'Two Factor Auth',
+        'url' => '/two-factor-authentication',
         'cluster' => null,
-        'sort_no' => 10,
+        'sort' => 1,
         'subnav_position' => SubNavigationPosition::Top
     ],
 
@@ -47,7 +48,8 @@ return [
         'navigation' => [
             'icon' => 'heroicon-m-megaphone',
             'label' => 'Banners',
-            'url' => 'banner-manager'
+            'url' => 'banner-manager',
+            'sort' => 50,
         ],
         'excluded_routes' => [
             'two-factor-authentication',
