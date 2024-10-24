@@ -1,15 +1,15 @@
 <?php
 
-namespace Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages;
+namespace Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages;
 
-use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource;
+use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Enums\MaxWidth;
 
-class EditTwoFactorBanner extends EditRecord
+class EditBanner extends EditRecord
 {
-    protected static string $resource = TwoFactorBannerResource::class;
+    protected static string $resource = BannerResource::class;
 
     protected function getHeaderActions(): array
     {

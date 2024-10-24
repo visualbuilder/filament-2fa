@@ -2,8 +2,7 @@
 
 namespace Visualbuilder\Filament2fa\Filament\Resources;
 
-use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages;
-use Filament\Forms;
+use Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages;
 use Filament\Forms\Components\Actions\Action as ComponentAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
@@ -26,17 +25,15 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\Support\Htmlable;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 use Visualbuilder\Filament2fa\Enums\ScheduleStatus;
-use Visualbuilder\Filament2fa\Models\TwoFactorBanner;
+use Visualbuilder\Filament2fa\Models\Banner;
 
-class TwoFactorBannerResource extends Resource
+class BannerResource extends Resource
 {
-    protected static ?string $model = TwoFactorBanner::class;
+    protected static ?string $model = Banner::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
@@ -232,9 +229,9 @@ class TwoFactorBannerResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListTwoFactorBanners::route('/'),
-            'create' => Pages\CreateTwoFactorBanner::route('/create'),
-            'edit' => Pages\EditTwoFactorBanner::route('/{record}/edit'),
+            'index' => Pages\ListBanners::route('/'),
+            'create' => Pages\CreateBanner::route('/create'),
+            'edit' => Pages\EditBanner::route('/{record}/edit'),
         ];
     }
 

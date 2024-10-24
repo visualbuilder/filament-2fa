@@ -48,10 +48,11 @@ return [
     'setup_step_1' => 'Step 1. Scan the QR Code',
     'setup_step_2' => 'Step 2. Enter the pin provided by your app',
 
-    'action_label'  => 'Submit OTP Pin and complete setup',
+    'action_label'  => 'Submit TOTP Pin and complete setup',
 
     'setup_message_1' => 'When two factor authentication is enabled, you will prompted for a secure pin during login. Your phone\'s authenticator application will provide a new pin every :interval seconds.',
     'setup_message_2' => 'To enable 2FA, scan the following QR code using an authenticator app on your phone (such as Google Authenticator, Microsoft Authenticator, Authy, or LastPass Authenticator). Then, enter the one-time passcode (OTP) to confirm the setup.',
 
-    'recovery_instruction' => 'Save these recovery codes in a safe place. Each code can be used once to recover your account if your two factor authentication device is lost.'
+    'recovery_instruction' => 'Important: Store these recovery codes in a secure location. Each code can be used only once to access your account if your two-factor authentication device is lost or unavailable. If you ever lose access to your primary device, you can use these codes to regain access to your account. Make sure not to share these codes with anyone to protect your account\'s security.'
+
 ];

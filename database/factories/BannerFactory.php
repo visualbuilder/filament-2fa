@@ -4,11 +4,11 @@ namespace Visualbuilder\Filament2fa\Database\Factories;
 
 use Filament\View\PanelsRenderHook;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Visualbuilder\Filament2fa\Models\TwoFactorBanner;
+use Visualbuilder\Filament2fa\Models\Banner;
 
-class TwoFactorBannerFactory extends Factory
+class BannerFactory extends Factory
 {
-    protected $model = TwoFactorBanner::class;
+    protected $model = Banner::class;
 
     public function definition()
     {

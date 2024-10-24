@@ -8,9 +8,9 @@ use Filament\View\PanelsRenderHook;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Laragear\TwoFactor\Contracts\TwoFactorAuthenticatable;
-use Visualbuilder\Filament2fa\Database\Factories\TwoFactorBannerFactory;
+use Visualbuilder\Filament2fa\Database\Factories\BannerFactory;
 
-class TwoFactorBanner extends Model
+class Banner extends Model
 {
     use HasFactory;
 
@@ -44,12 +44,14 @@ class TwoFactorBanner extends Model
         'auth_guards' => 'array'
     ];
 
+    protected $table = 'two_factor_banners';
+
     /**
-     * @return TwoFactorBannerFactory
+     * @return BannerFactory
      */
     protected static function newFactory()
     {
-        return TwoFactorBannerFactory::new();
+        return BannerFactory::new();
     }
 
 
@@ -117,16 +119,10 @@ class TwoFactorBanner extends Model
         };
     }
 
-    public function validateIs2FaBanner($request)
+    public function isApplicableForUser($user)
     {
-        $user = $request->user();
         return (!$this->is_2fa_setup
-            || (
-                $this->is_2fa_setup
-                && $user instanceof TwoFactorAuthenticatable
-                && !$user->hasTwoFactorEnabled()
-            )
-        );
+            || ($this->is_2fa_setup && $user instanceof TwoFactorAuthenticatable && !$user->hasTwoFactorEnabled()));
     }
 
     public function checkGuard()

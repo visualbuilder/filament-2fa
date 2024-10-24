@@ -3,39 +3,39 @@
 use Filament\Actions\DeleteAction;
 use Filament\Facades\Filament;
 use Filament\Tables\Actions\DeleteBulkAction;
-use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource;
-use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\CreateTwoFactorBanner;
-use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\EditTwoFactorBanner;
-use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource\Pages\ListTwoFactorBanners;
-use Visualbuilder\Filament2fa\Models\TwoFactorBanner;
+use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
+use Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages\CreateBanner;
+use Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages\EditBanner;
+use Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages\ListBanners;
+use Visualbuilder\Filament2fa\Models\Banner;
 
 use function Pest\Livewire\livewire;
 
 it('can access banner page', function () {
     $this->actingAs($this->createUser());
-    $this->get(TwoFactorBannerResource::getUrl('index'))
+    $this->get(BannerResource::getUrl('index'))
         ->assertSuccessful();
 });
 
 it('can list banners', function () {
     $this->actingAs($this->createUser());
-    $banners = TwoFactorBanner::factory()->count(5)->create();
-    livewire(ListTwoFactorBanners::class)
+    $banners = Banner::factory()->count(5)->create();
+    livewire(ListBanners::class)
         ->assertCanSeeTableRecords($banners);
 });
 
 it('can access create banner page', function () {
     $this->actingAs($this->createUser());
 
-    $this->get(TwoFactorBannerResource::getUrl('create'))
+    $this->get(BannerResource::getUrl('create'))
         ->assertSuccessful();
 });
 
 it('can create banner', function () {
 
-    $banner = TwoFactorBanner::factory()->make();
+    $banner = Banner::factory()->make();
 
-    $storedData = livewire(CreateTwoFactorBanner::class)
+    $storedData = livewire(CreateBanner::class)
         ->fillForm([
             'name' => $banner->name,
             'content' => $banner->content,
@@ -58,7 +58,7 @@ it('can create banner', function () {
         ->call('create')
         ->assertHasNoFormErrors();
 
-    $this->assertDatabaseHas(TwoFactorBanner::class, [
+    $this->assertDatabaseHas(Banner::class, [
         'name' => $storedData->data['name'],
         'render_location' => $storedData->data['render_location'],
         'can_be_closed_by_user' => $storedData->data['can_be_closed_by_user'],
@@ -67,7 +67,7 @@ it('can create banner', function () {
 });
 
 it('can validate create banner form', function () {
-    livewire(CreateTwoFactorBanner::class)
+    livewire(CreateBanner::class)
         ->fillForm([])
         ->call('create')
         ->assertHasFormErrors([
@@ -80,17 +80,17 @@ it('can validate create banner form', function () {
 
 it('can access edit banner page', function () {
     $this->actingAs($this->createUser());
-    $banner = TwoFactorBanner::factory()->create();
-    $this->get(TwoFactorBannerResource::getUrl('edit', [
+    $banner = Banner::factory()->create();
+    $this->get(BannerResource::getUrl('edit', [
         'record' => $banner,
     ]))->assertSuccessful();
 });
 
 it('can update banner', function () {
-    $bannerNew = TwoFactorBanner::factory()->create();
-    $banner = TwoFactorBanner::factory()->make();
+    $bannerNew = Banner::factory()->create();
+    $banner = Banner::factory()->make();
 
-    $updatedData = livewire(EditTwoFactorBanner::class, [
+    $updatedData = livewire(EditBanner::class, [
         'record' => $bannerNew->getRouteKey(),
     ])->fillForm([
         'name' => $banner->name,
@@ -114,7 +114,7 @@ it('can update banner', function () {
     ->call('save')
     ->assertHasNoFormErrors();
 
-    $this->assertDatabaseHas(TwoFactorBanner::class, [
+    $this->assertDatabaseHas(Banner::class, [
         'name' => $banner->name,
         'render_location' => $banner->render_location,
         'is_active' => $banner->is_active,
@@ -122,9 +122,9 @@ it('can update banner', function () {
 });
 
 it('can delete banner', function () {
-    $banner = TwoFactorBanner::factory()->create();
+    $banner = Banner::factory()->create();
 
-    livewire(EditTwoFactorBanner::class, [
+    livewire(EditBanner::class, [
         'record' => $banner->getRouteKey(),
     ])->callAction(DeleteAction::class);
 
@@ -132,9 +132,9 @@ it('can delete banner', function () {
 });
 
 it('can delete multiple banners', function () {
-    $banners = TwoFactorBanner::factory()->count(4)->create();
+    $banners = Banner::factory()->count(4)->create();
 
-    livewire(ListTwoFactorBanners::class)
+    livewire(ListBanners::class)
         ->callTableBulkAction(DeleteBulkAction::class, $banners->pluck('id')->toArray());
 
     foreach ($banners as $banner) {
@@ -143,13 +143,13 @@ it('can delete multiple banners', function () {
 });
 
 it('can disable multiple banners', function () {
-    $banners = TwoFactorBanner::factory()->count(4)->create();
+    $banners = Banner::factory()->count(4)->create();
 
-    livewire(ListTwoFactorBanners::class)
+    livewire(ListBanners::class)
         ->callTableBulkAction('disableSelected', $banners->pluck('id')->toArray());
 
     foreach ($banners as $banner) {
-        $this->assertDatabaseHas(TwoFactorBanner::class, [
+        $this->assertDatabaseHas(Banner::class, [
             'id' => $banner->id,
             'is_active' => false,
         ]);
@@ -157,13 +157,13 @@ it('can disable multiple banners', function () {
 });
 
 it('can enable multiple banners', function () {
-    $banners = TwoFactorBanner::factory()->count(4)->create();
+    $banners = Banner::factory()->count(4)->create();
 
-    livewire(ListTwoFactorBanners::class)
+    livewire(ListBanners::class)
         ->callTableBulkAction('enableSelected', $banners->pluck('id')->toArray());
 
     foreach ($banners as $banner) {
-        $this->assertDatabaseHas(TwoFactorBanner::class, [
+        $this->assertDatabaseHas(Banner::class, [
             'id' => $banner->id,
             'is_active' => true,
         ]);

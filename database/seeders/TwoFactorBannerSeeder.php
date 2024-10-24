@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use Filament\View\PanelsRenderHook;
 use Illuminate\Database\Seeder;
-use Visualbuilder\Filament2fa\Models\TwoFactorBanner;
+use Visualbuilder\Filament2fa\Models\Banner;
 
 class TwoFactorBannerSeeder extends Seeder
 {
@@ -16,7 +16,7 @@ class TwoFactorBannerSeeder extends Seeder
     public function run()
     {
         // You can adjust the count to create as many entries as you need
-        TwoFactorBanner::factory()->create([
+        Banner::factory()->create([
             'name'                  => 'Admin 2FA Setup',
             'content'               => '<p>Improve security and setup 2 Factor Authentication.&nbsp; <a href="/two-factor-authentication"><span style="text-decoration: underline;">Click here to get started with your phone now.</span></a></p>',
             'render_location'       => PanelsRenderHook::BODY_START,

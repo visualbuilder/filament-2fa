@@ -13,18 +13,30 @@ class RedirectIfTwoFactorNotActivated
     public function handle(Request $request, Closure $next): mixed
     {
         $user = $request->user();
-        $authGuards = config('filament-2fa.auth_guards');
-        if($user instanceof TwoFactorAuthenticatable
-            && Arr::has($authGuards, Filament::getAuthGuard())
-            && $authGuards[Filament::getAuthGuard()]['mandatory']
-            && !$user->hasTwoFactorEnabled()
-            && !$request->is(...config('filament-2fa.exclude_routes'))) {
+        $authGuard = Filament::getAuthGuard();
 
-            return $request->expectsJson()
-            ? response()->json(['message' => trans('two-factor::messages.enable')], 403)
-            : response()->redirectTo('two-factor-authentication');
+        if ($this->requires2FARedirection($user, $authGuard, $request)) {
+            return $this->handle2FARedirection($request);
         }
 
         return $next($request);
     }
+
+    private function requires2FARedirection($user, $authGuard, $request): bool
+    {
+        $authGuards = config('filament-2fa.auth_guards');
+        return $user instanceof TwoFactorAuthenticatable
+            && Arr::has($authGuards, $authGuard)
+            && $authGuards[$authGuard]['mandatory']
+            && !$user->hasTwoFactorEnabled()
+            && !$request->is(...config('filament-2fa.exclude_routes'));
+    }
+
+    private function handle2FARedirection(Request $request)
+    {
+        return $request->expectsJson()
+            ? response()->json(['message' => trans('two-factor::messages.enable')], 403)
+            : response()->redirectTo('two-factor-authentication');
+    }
+
 }

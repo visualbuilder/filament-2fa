@@ -17,7 +17,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Visualbuilder\Filament2fa\Filament\Pages\Configure;
-use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource;
+use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
 
 class UserPanelProvider extends PanelProvider
 {
@@ -31,7 +31,7 @@ class UserPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->resources([
-                TwoFactorBannerResource::class
+                BannerResource::class
             ])
             ->pages([
                 Configure::class

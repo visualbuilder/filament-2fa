@@ -31,11 +31,6 @@ class Confirm2Fa extends SimplePage implements HasForms
 
     public string $totp_code;
 
-    public static function getSort(): int
-    {
-        return static::$sort ?? -1;
-    }
-
     public static function canView()
     {
         return false;

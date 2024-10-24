@@ -2,7 +2,7 @@
 
 namespace Visualbuilder\Filament2fa;
 
-use Visualbuilder\Filament2fa\Filament\Resources\TwoFactorBannerResource;
+use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Illuminate\Session\Middleware\AuthenticateSession;
@@ -52,7 +52,7 @@ class TwoFactorPlugin implements Plugin
         ]);
 
         $panel->resources([
-            TwoFactorBannerResource::class
+            BannerResource::class
         ]);
 
         $panel->middleware([
