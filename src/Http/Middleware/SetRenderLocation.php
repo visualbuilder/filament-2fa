@@ -39,7 +39,7 @@ class SetRenderLocation
     {
         return $banners->filter(function (Banner $banner) use ($user) {
             return $banner->isVisible()
-                && $banner->sApplicableForUser($user)
+                && $banner->isApplicableForUser($user)
                 && $banner->checkGuard()
                 && $this->checkCurrentAuth();
         });

@@ -10,64 +10,117 @@ use Filament\Models\Contracts\FilamentUser;
 use Visualbuilder\Filament2fa\TwoFactorAuthResponse;
 use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 class Login extends BaseLogin
 {
     public function authenticate(): null|TwoFactorAuthResponse|LoginResponse
     {
-        try {
-            $this->rateLimit(5);
-        } catch (TooManyRequestsException $exception) {
-            $this->getRateLimitedNotification($exception)?->send();
-
-            return null;
+        if ($response = $this->handleRateLimiting()) {
+            return $response;
         }
 
         $data = $this->form->getState();
+        $credentials = $this->getCredentialsFromFormData($data);
+        $remember = $data['remember'] ?? false;
 
-        $responseClass = LoginResponse::class;
-
-        if (! Filament::auth()->attempt($this->getCredentialsFromFormData($data), $data['remember'] ?? false)) {
+        if (! $this->attemptLogin($credentials, $remember)) {
             $this->throwFailureValidationException();
         }
 
         $user = Filament::auth()->user();
 
-        /** Check If user loggedin with unsafe device redirecting to 2fa verification page */
-        if ($user instanceof TwoFactorAuthenticatable && $user->hasTwoFactorEnabled() && !$user->isSafeDevice(request())) {
-            $responseClass = TwoFactorAuthResponse::class;
-            $this->flashData($this->getCredentialsFromFormData($data), $data['remember'] ?? false);
-            Filament::auth()->logout();
-            goto response;
+        if ($response = $this->handleTwoFactorAuthentication($user, $credentials, $remember)) {
+            return $response;
         }
 
-        response:
-        if (
-            ($user instanceof FilamentUser) &&
-            (! $user->canAccessPanel(Filament::getCurrentPanel()))
-        ) {
+        if (! $this->userCanAccessPanel($user)) {
             Filament::auth()->logout();
             $this->throwFailureValidationException();
         }
 
         session()->regenerate();
 
-        return app($responseClass);
+        return app(LoginResponse::class);
     }
 
     /**
-     * Flashes the credentials into the session, encrypted.
+     * Handle rate limiting for login attempts.
      */
-    protected function flashData(array $credentials, bool $remember): void
+    protected function handleRateLimiting(): ?LoginResponse
     {
-        foreach ($credentials as $key => $value) {
-            $credentials[$key] = Crypt::encryptString($value);
+        try {
+            $this->rateLimit(5);
+        } catch (TooManyRequestsException $exception) {
+            $this->getRateLimitedNotification($exception)?->send();
+            return null;
         }
 
+        return null;
+    }
+
+    /**
+     * Attempt to authenticate the user.
+     */
+    protected function attemptLogin(array $credentials, bool $remember): bool
+    {
+        return Filament::auth()->attempt($credentials, $remember);
+    }
+
+    /**
+     * Handle two-factor authentication if required.
+     */
+    protected function handleTwoFactorAuthentication(Authenticatable $user, array $credentials, bool $remember): ?TwoFactorAuthResponse
+    {
+        if ($this->needsTwoFactorAuthentication($user)) {
+            $this->flashCredentials($credentials, $remember);
+            Filament::auth()->logout();
+
+            return app(TwoFactorAuthResponse::class);
+        }
+
+        return null;
+    }
+
+    /**
+     * Determine if two-factor authentication is required.
+     */
+    protected function needsTwoFactorAuthentication(Authenticatable $user): bool
+    {
+        return $user instanceof TwoFactorAuthenticatable
+            && $user->hasTwoFactorEnabled()
+            && ! $user->isSafeDevice(request());
+    }
+
+    /**
+     * Check if the authenticated user can access the current panel.
+     */
+    protected function userCanAccessPanel(Authenticatable $user): bool
+    {
+        return ! ($user instanceof FilamentUser && ! $user->canAccessPanel(Filament::getCurrentPanel()));
+    }
+
+    /**
+     * Flash the credentials into the session, encrypted.
+     */
+    protected function flashCredentials(array $credentials, bool $remember): void
+    {
+        $encryptedCredentials = array_map(
+            fn($value) => Crypt::encryptString($value),
+            $credentials
+        );
+
+        $sessionData = [
+            'credentials' => $encryptedCredentials,
+            'remember' => $remember,
+        ];
+
+        $credentialKey = config('filament-2fa.login.credential_key');
+
         if (config('filament-2fa.login.flashLoginCredentials')) {
-            request()->session()->flash(config('filament-2fa.login.credential_key'), ['credentials' => $credentials, 'remember' => $remember]);
+            request()->session()->flash($credentialKey, $sessionData);
         } else {
-            session([config('filament-2fa.login.credential_key') => ['credentials' => $credentials, 'remember' => $remember]]);
+            session([$credentialKey => $sessionData]);
         }
     }
 }

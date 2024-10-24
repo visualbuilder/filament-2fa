@@ -119,26 +119,24 @@ public function panel(Panel $panel): Panel
         ->login(Login::class)
         ->userMenuItems([
         /**
-        * All users page to configure their 2fa
-         */
-            MenuItem::make('two-factor')
-                    ->url(config('filament-2fa.navigation.url'))
-                    ->label(config('filament-2fa.navigation.label'))
-                    ->icon(config('filament-2fa.navigation.icon'))
-                    ->sort(config('filament-2fa.navigation.sort')),
-                
-           /**
-            * This allows editing system wide banners - should only be available to admins 
-            * May need to think about other logic to restrict access
-            */
-            MenuItem::make('two-factor-banner')
-                ->url(config('filament-2fa.banner.navigation.url'))
-                ->label(config('filament-2fa.banner.navigation.label'))
-                ->icon(config('filament-2fa.banner.navigation.icon'))
-                ->sort(config('filament-2fa.banner.navigation.sort')),
-                ->visible(config('filament-2fa.banner.auth_guards.web.can_manage')),
-        ])
-}
+        * 2FA setup and manage link
+        */
+        MenuItem::make('two-factor')
+                    ->url('/two-factor-authentication')
+                    ->label('Two Factor Auth')
+                    ->icon('heroicon-o-key')
+                    ->sort(1),
+                    
+         /**
+         * Banner manager
+         * Ensure you limit access to who can change banners 
+         */           
+        MenuItem::make('two-factor-banner')
+            ->url(config('filament-2fa.banner.navigation.url'))
+            ->label(config('filament-2fa.banner.navigation.label'))
+            ->icon(config('filament-2fa.banner.navigation.icon'))
+            ->sort(2)
+            ->visible(fn() => Filament::auth()->user()->hasRole(['Developer', 'Super Admin'],'web'))
 ```
 
 ### Step 4:
