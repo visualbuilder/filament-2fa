@@ -16,8 +16,11 @@ class Login extends BaseLogin
 {
     public function authenticate(): null|TwoFactorAuthResponse|LoginResponse
     {
-        if ($response = $this->handleRateLimiting()) {
-            return $response;
+        $this->handleRateLimiting();
+
+        // Stop execution if there are validation errors
+        if ($this->getErrorBag()->isNotEmpty()) {
+            return null;
         }
 
         $data = $this->form->getState();
@@ -30,8 +33,11 @@ class Login extends BaseLogin
 
         $user = Filament::auth()->user();
 
-        if ($response = $this->handleTwoFactorAuthentication($user, $credentials, $remember)) {
-            return $response;
+        if ($this->needsTwoFactorAuthentication($user)) {
+            $this->storeCredentials($credentials, $remember);
+            Filament::auth()->logout();
+
+            return app(TwoFactorAuthResponse::class);
         }
 
         if (! $this->userCanAccessPanel($user)) {
@@ -47,16 +53,20 @@ class Login extends BaseLogin
     /**
      * Handle rate limiting for login attempts.
      */
-    protected function handleRateLimiting(): ?LoginResponse
+    protected function handleRateLimiting(): void
     {
         try {
             $this->rateLimit(5);
         } catch (TooManyRequestsException $exception) {
+            // Optionally send a notification (can be omitted if not needed)
             $this->getRateLimitedNotification($exception)?->send();
-            return null;
-        }
 
-        return null;
+            // Use the available property to get the number of seconds
+            $this->addError('email', __('auth.throttle', ['seconds' => $exception->secondsUntilAvailable]));
+
+            // Stop further execution by returning early
+            return;
+        }
     }
 
     /**
@@ -73,7 +83,7 @@ class Login extends BaseLogin
     protected function handleTwoFactorAuthentication(Authenticatable $user, array $credentials, bool $remember): ?TwoFactorAuthResponse
     {
         if ($this->needsTwoFactorAuthentication($user)) {
-            $this->flashCredentials($credentials, $remember);
+            $this->storeCredentials($credentials, $remember);
             Filament::auth()->logout();
 
             return app(TwoFactorAuthResponse::class);
@@ -101,9 +111,10 @@ class Login extends BaseLogin
     }
 
     /**
-     * Flash the credentials into the session, encrypted.
+     * Save credentials to session encrypted.
+     * Flash not possible with Filament as Livewire call would clear them before they can be used
      */
-    protected function flashCredentials(array $credentials, bool $remember): void
+    protected function storeCredentials(array $credentials, bool $remember): void
     {
         $encryptedCredentials = array_map(
             fn($value) => Crypt::encryptString($value),
@@ -117,10 +128,6 @@ class Login extends BaseLogin
 
         $credentialKey = config('filament-2fa.login.credential_key');
 
-        if (config('filament-2fa.login.flashLoginCredentials')) {
-            request()->session()->flash($credentialKey, $sessionData);
-        } else {
-            session([$credentialKey => $sessionData]);
-        }
+        session([$credentialKey => $sessionData]);
     }
 }
