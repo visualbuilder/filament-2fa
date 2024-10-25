@@ -134,6 +134,7 @@ class Configure extends EditProfile
         return Action::make('save')
             ->label($this->getUser()->hasTwoFactorEnabled() ? __('filament-2fa::two-factor.save_changes') : __('filament-2fa::two-factor.action_label'))
             ->submit('save')
+            ->visible(fn()=>!$this->getUser()->hasTwoFactorEnabled())
             ->keyBindings(['mod+s']);
     }
 
@@ -200,7 +201,7 @@ class Configure extends EditProfile
             ->relationship('twoFactorAuth')
             ->schema([
                 $this->enable2FactorAuthGroupComponent(),
-                $this->disable2FactorAuthGroupComponent()
+                $this->manage2FactorAuthGroupComponent()
             ]);
     }
 
@@ -238,13 +239,19 @@ class Configure extends EditProfile
                                     ->content(fn () => new HtmlString('<h3 class="text-lg font-bold text-primary">' . __('filament-2fa::two-factor.setup_step_2') . '</h3>')),
                                 TextInput::make('2fa_code')
                                     ->label(__('filament-2fa::two-factor.confirm'))
-                                    ->numeric()
                                     ->autofocus()
                                     ->required(!$this->getUser()->hasTwoFactorEnabled())
-                                    ->minLength(config('two-factor.totp.digits'))
-                                    ->maxLength(config('two-factor.totp.digits'))
+                                    ->length(config('two-factor.totp.digits'))
                                     ->autocomplete(false)
-                                    ->afterStateUpdated(fn ($state) => $this->data['2fa_code'] = $state),
+                                    ->live()
+                                    ->extraInputAttributes(['class'=>'text-center','style'=>'font-size:3em; letter-spacing:1rem'])
+                                    ->afterStateUpdated(function ($state) {
+                                        $requiredLength = config('two-factor.totp.digits');
+                                        if (strlen($state) == $requiredLength) {
+                                            $this->data['2fa_code'] = $state;
+                                            $this->save();
+                                        }
+                                    }),
                             ])
                             ->columnSpan([
                                 'sm' => 2, // Full-width on small screens
@@ -269,7 +276,7 @@ class Configure extends EditProfile
         ];
     }
 
-    protected function disable2FactorAuthGroupComponent(): Component
+    protected function manage2FactorAuthGroupComponent(): Component
     {
         return Group::make()
             ->schema([
@@ -293,21 +300,24 @@ class Configure extends EditProfile
                             $this->recoveryCodes = $this->getUser()->generateRecoveryCodes();
                         })
                         ->visible($this->showRecoveryCodes)
+                        ->requiresConfirmation(),
+                    FormAction::make('disableTwoFactorAuth')
+                        ->label(__('filament-2fa::two-factor.disable_2fa'))
+                        ->color('danger')
                         ->requiresConfirmation()
+                        ->icon('heroicon-m-shield-exclamation')
+                        ->modalDescription('You will need to remove the account from your device.  That account will not work again.')
+                        ->action(function () {
+                            $this->getUser()->disableTwoFactorAuth();
+                            $this->data['disable_two_factor_auth'] = true;
+                            $this->save();
+                        }),
                 ]),
                 Placeholder::make('recovery_code')
                     ->label('')
                     ->content($this->prepareRecoveryCodes())
                     ->visible($this->showRecoveryCodes),
-                Toggle::make('disable_two_factor_auth')
-                    ->label(__('filament-2fa::two-factor.disable_2fa'))
-                    ->inline(false)
-                    ->onColor('danger')
-                    ->offColor('success')
-                    ->onIcon('heroicon-m-x-mark')
-                    ->offIcon('heroicon-m-check-circle')
-                    ->live()
-                    ->afterStateUpdated(fn($state) => $this->data['disable_two_factor_auth'] = $state),
+
             ])
             ->visible($this->getUser()->hasTwoFactorEnabled());
     }

@@ -9,7 +9,7 @@ return [
 
     'success' => 'The OTP code has been validated successfully.',
 
-    'fail_2fa' => 'The TOTP code has expired or is invalid.',
+    'fail_2fa' => 'The OTP code has expired or is invalid.',
     'fail_confirm' => 'The OTP to activate Two-Factor Authentication is invalid.',
     'enabled'      => 'Two-Factor Authentication has been enabled.',
     'disabled'     => 'Two-Factor Authentication has been disabled.',
@@ -17,7 +17,7 @@ return [
 
     'safe_device' => 'We won\'t ask you for Two-Factor Authentication codes in this device for some time.',
     'safe_device_hint'=>'Uncheck this if using a public or shared device.',
-    'totp_or_recovery_code'   => 'One time Pin or Recovery code',
+    'totp_or_recovery_code'   => 'One Time Pin or Recovery code',
     'confirm_otp_hint'  => 'An OTP should have :otpLength digits, while a recovery code can be alphanumeric and should be :recoveryLength characters.',
     'one_time_pin'   => 'One Time Pin',
     'enable_safe_device'   => 'Remember this device for :days days.',
@@ -48,7 +48,7 @@ return [
     'setup_step_1' => 'Step 1. Scan the QR Code',
     'setup_step_2' => 'Step 2. Enter the pin provided by your app',
 
-    'action_label'  => 'Submit TOTP Pin and complete setup',
+    'action_label'  => 'Submit pin and complete setup',
 
     'setup_message_1' => 'When two factor authentication is enabled, you will prompted for a secure pin during login. Your phone\'s authenticator application will provide a new pin every :interval seconds.',
     'setup_message_2' => 'To enable 2FA, scan the following QR code using an authenticator app on your phone (such as Google Authenticator, Microsoft Authenticator, Authy, or LastPass Authenticator). Then, enter the one-time passcode (OTP) to confirm the setup.',

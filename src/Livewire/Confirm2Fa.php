@@ -142,6 +142,7 @@ class Confirm2Fa extends SimplePage implements HasForms
                     ->maxLength(8)
                     ->required()
                     ->autocomplete(false)
+                    ->extraInputAttributes(['class'=>'text-center','style'=>'font-size:2.6em; letter-spacing:1rem'])
                     ->live()
                     ->afterStateUpdated(function ($state) {
                         $requiredLength = config('two-factor.totp.digits');
