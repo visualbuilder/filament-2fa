@@ -239,9 +239,10 @@ class Configure extends EditProfile
                                 TextInput::make('2fa_code')
                                     ->label(__('filament-2fa::two-factor.confirm'))
                                     ->numeric()
+                                    ->autofocus()
                                     ->required(!$this->getUser()->hasTwoFactorEnabled())
-                                    ->minLength(6)
-                                    ->maxLength(6)
+                                    ->minLength(config('two-factor.totp.digits'))
+                                    ->maxLength(config('two-factor.totp.digits'))
                                     ->autocomplete(false)
                                     ->afterStateUpdated(fn ($state) => $this->data['2fa_code'] = $state),
                             ])

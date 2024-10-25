@@ -16,11 +16,11 @@ return [
     'enabled_message' => 'Two-Factor Authentication was enabled on :date.',
 
     'safe_device' => 'We won\'t ask you for Two-Factor Authentication codes in this device for some time.',
-
+    'safe_device_hint'=>'Uncheck this if using a public or shared device.',
     'totp_or_recovery_code'   => 'One time Pin or Recovery code',
     'confirm_otp_hint'  => 'An OTP should have :otpLength digits, while a recovery code can be alphanumeric and should be :recoveryLength characters.',
     'one_time_pin'   => 'One Time Pin',
-    'enable_safe_device'   => 'Remember this device for :days days',
+    'enable_safe_device'   => 'Remember this device for :days days.',
     'confirm'   => 'Confirm code',
     'enabled_at' => 'Enabled at',
     'switch_on' => 'Go to enable Two-Factor Authentication.',

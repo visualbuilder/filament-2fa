@@ -27,10 +27,6 @@ class Confirm2Fa extends SimplePage implements HasForms
 
     protected static string $view = 'filament-2fa::livewire.confirm2-fa';
 
-    public bool $safe_device_enable;
-
-    public string $totp_code;
-
     public static function canView()
     {
         return false;
@@ -47,6 +43,11 @@ class Confirm2Fa extends SimplePage implements HasForms
         if (!$credentials) {
             return redirect(Filament::getLoginUrl());
         }
+        // Initialize the form with default values
+        $this->form->fill([
+            'totp_code' => '',
+            'safe_device_enable' => true,
+        ]);
     }
 
     /**
@@ -77,12 +78,10 @@ class Confirm2Fa extends SimplePage implements HasForms
             $this->redirect(Filament::getUrl());
         } else {
             if (app(FilamentTwoFactor::class,
-                    [
-                        //Why  is 'input' needed?
-//                        'input'           => 'totp_code',
-                        'code'            => $formData['totp_code'],
-                        'safeDeviceInput' => isset($formData['safe_device_enable']) ? $formData['safe_device_enable'] : false
-                    ])->validate2Fa($user)) {
+                [
+                    'code'            => $formData['totp_code'],
+                    'safeDeviceInput' => isset($formData['safe_device_enable']) ? $formData['safe_device_enable'] : false
+                ])->validate2Fa($user)) {
                 Notification::make()
                     ->title('Success')
                     ->body(__('filament-2fa::two-factor.success'))
@@ -138,15 +137,27 @@ class Confirm2Fa extends SimplePage implements HasForms
                     ->content(__('filament-2fa::two-factor.confirm_otp_hint', ['otpLength' => config('two-factor.totp.digits'), 'recoveryLength' => config('two-factor.recovery.length')])),
                 TextInput::make('totp_code')
                     ->label(__('filament-2fa::two-factor.totp_or_recovery_code'))
+                    ->autofocus()
+                    ->minLength(config('two-factor.totp.digits'))
+                    ->maxLength(8)
                     ->required()
-                    ->autocomplete(false),
+                    ->autocomplete(false)
+                    ->live()
+                    ->afterStateUpdated(function ($state) {
+                        $requiredLength = config('two-factor.totp.digits');
+                        if (strlen($state) == $requiredLength) {
+                            $this->submit();
+                        }
+                    }),
                 Toggle::make('safe_device_enable')
                     ->label(__('filament-2fa::two-factor.enable_safe_device',['days' => config('two-factor.safe_devices.expiration_days')]))
-                    ->inline(false)
+                    ->hintIcon('heroicon-o-information-circle',__('filament-2fa::two-factor.safe_device_hint'))
+                    ->inline()
                     ->onColor('success')
                     ->offColor('danger')
                     ->onIcon('heroicon-m-check-circle')
                     ->offIcon('heroicon-m-x-mark')
+                    ->default(true)
                     ->visible(config('two-factor.safe_devices.enabled'))
             ]);
     }
