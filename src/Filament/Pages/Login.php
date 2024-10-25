@@ -78,21 +78,6 @@ class Login extends BaseLogin
     }
 
     /**
-     * Handle two-factor authentication if required.
-     */
-    protected function handleTwoFactorAuthentication(Authenticatable $user, array $credentials, bool $remember): ?TwoFactorAuthResponse
-    {
-        if ($this->needsTwoFactorAuthentication($user)) {
-            $this->storeCredentials($credentials, $remember);
-            Filament::auth()->logout();
-
-            return app(TwoFactorAuthResponse::class);
-        }
-
-        return null;
-    }
-
-    /**
      * Determine if two-factor authentication is required.
      */
     protected function needsTwoFactorAuthentication(Authenticatable $user): bool
