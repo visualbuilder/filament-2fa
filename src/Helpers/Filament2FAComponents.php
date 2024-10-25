@@ -2,8 +2,10 @@
 
 namespace Visualbuilder\Filament2fa\Helpers;
 
+use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
+use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
 
 class Filament2FAComponents
 {
@@ -25,9 +27,17 @@ class Filament2FAComponents
             ->action(function ($record) {
                 if ($record instanceof TwoFactorAuthenticatable) {
                     $record->hasTwoFactor()->delete();
-                    $this->notify('success', '2FA has been reset.');
+                    Notification::make('2fa_deleted')
+                        ->title('2FA has been deleted')
+                        ->icon('fas-lock')
+                        ->iconColor('danger')
+                        ->send();
                 } else {
-                    $this->notify('danger', 'This user does not support 2FA reset.');
+                    Notification::make('2fa_deleted')
+                        ->title('The model '.basename($record). ' is not enabled for 2FA')
+                        ->icon('fas-lock')
+                        ->iconColor('danger')
+                        ->send();
                 }
             });
     }
