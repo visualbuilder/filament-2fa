@@ -7,6 +7,7 @@ use Filament\Facades\Filament;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Laragear\TwoFactor\Contracts\TwoFactorAuthenticatable;
 use Visualbuilder\Filament2fa\Database\Factories\BannerFactory;
 
@@ -45,6 +46,22 @@ class Banner extends Model
     ];
 
     protected $table = 'two_factor_banners';
+
+    protected static function booted()
+    {
+        parent::booted();
+
+        // When a banner is created or updated
+        static::saved(function ($banner) {
+            Cache::forget('all_banners');
+        });
+
+        // When a banner is deleted
+        static::deleted(function ($banner) {
+            Cache::forget('all_banners');
+        });
+    }
+
 
     /**
      * @return BannerFactory
