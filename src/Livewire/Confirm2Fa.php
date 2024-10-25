@@ -27,15 +27,9 @@ class Confirm2Fa extends SimplePage implements HasForms
 
     protected static string $view = 'filament-2fa::livewire.confirm2-fa';
 
-    public static function canView()
-    {
-        return false;
-    }
+    public bool $safe_device_enable = true;
 
-    public function hasTopbar(): bool
-    {
-        return false;
-    }
+    public string $totp_code;
 
     public function mount()
     {
@@ -145,14 +139,14 @@ class Confirm2Fa extends SimplePage implements HasForms
                     ->extraInputAttributes(['class'=>'text-center','style'=>'font-size:2.6em; letter-spacing:1rem'])
                     ->live()
                     ->afterStateUpdated(function ($state) {
-                        $requiredLength = config('two-factor.totp.digits');
-                        if (strlen($state) == $requiredLength) {
+                        if (strlen($state) === config('two-factor.totp.digits')) {
                             $this->submit();
                         }
                     }),
                 Toggle::make('safe_device_enable')
                     ->label(__('filament-2fa::two-factor.enable_safe_device',['days' => config('two-factor.safe_devices.expiration_days')]))
                     ->hintIcon('heroicon-o-information-circle',__('filament-2fa::two-factor.safe_device_hint'))
+                    ->hintColor('info')
                     ->inline()
                     ->onColor('success')
                     ->offColor('danger')
