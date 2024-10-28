@@ -242,7 +242,7 @@ class Configure extends EditProfile
                                     ->length(config('two-factor.totp.digits'))
                                     ->autocomplete(false)
                                     ->live()
-                                    ->extraInputAttributes(['class' => 'text-center', 'style' => 'font-size:3em; letter-spacing:1rem'])
+                                    ->extraInputAttributes(['class' => 'text-center', 'style' => 'font-size:2.6em; letter-spacing:1rem'])
                                     ->afterStateUpdated(function ($state) {
                                         $requiredLength = config('two-factor.totp.digits');
                                         if (strlen($state) == $requiredLength) {
