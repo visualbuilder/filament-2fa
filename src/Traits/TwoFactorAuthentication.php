@@ -29,4 +29,9 @@ trait TwoFactorAuthentication
     {
         return $this->twoFactorAuth;
     }
+
+    public function forgetSafeDevices(): bool
+    {
+        return $this->twoFactorAuth->forceFill(['safe_devices' => []])->save();
+    }
 }

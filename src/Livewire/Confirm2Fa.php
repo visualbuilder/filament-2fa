@@ -50,7 +50,7 @@ class Confirm2Fa extends SimplePage implements HasForms
         // Initialize the form with default values
         $this->form->fill([
             'totp_code' => '',
-            'safe_device_enable' => true,
+            'safe_device_enable' => false,
         ]);
     }
 
@@ -95,7 +95,7 @@ class Confirm2Fa extends SimplePage implements HasForms
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->send();
-                
+
                 session()->forget("{$sessionKey}.credentials");
                 session()->forget("{$sessionKey}.remember");
                 session()->forget("{$sessionKey}.panel_id");

@@ -19,4 +19,9 @@ interface TwoFactorAuthenticatable extends BaseTwoFactorAuthenticatable
      */
     public function getTwoFactorAuth(): TwoFactorTotp;
 
+    /**
+     * Remove safe devices
+     */
+    public function forgetSafeDevices(): bool;
+
 }

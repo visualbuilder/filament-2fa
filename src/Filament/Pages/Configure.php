@@ -2,33 +2,31 @@
 
 namespace Visualbuilder\Filament2fa\Filament\Pages;
 
+use Carbon\Carbon;
 use Exception;
-use Filament\Forms\Components\Actions;
-use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
+use Filament\Forms\Components\Actions;
+use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Forms\Components\Component;
-use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Grid;
 use Filament\Forms\Components\Group;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ViewField;
 use Filament\Notifications\Notification;
 use Filament\Pages\Auth\EditProfile;
 use Filament\Pages\SubNavigationPosition;
 use Filament\Support\Enums\Alignment;
-use Filament\Support\Facades\FilamentView;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
+use Laragear\TwoFactor\Models\TwoFactorAuthentication;
 use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
-
-use function Filament\Support\is_app_url;
 
 
 class Configure extends EditProfile
@@ -45,6 +43,17 @@ class Configure extends EditProfile
     public function __construct()
     {
         $this->recoveryCodes = $this->getUser()->hasTwoFactorEnabled() ? $this->getUser()->getRecoveryCodes() : [];
+    }
+
+    public function getUser(): Authenticatable & Model
+    {
+        $user = Filament::auth()->user();
+
+        if (!$user instanceof Model || !$user instanceof TwoFactorAuthenticatable) {
+            throw new Exception('The authenticated user must be an Eloquent model implementing TwoFactorAuthenticatable class.');
+        }
+
+        return $user;
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -82,9 +91,10 @@ class Configure extends EditProfile
         return config('filament-2fa.navigation.sort_no');
     }
 
-    public function getSubNavigationPosition(): SubNavigationPosition
+    public static function getRouteName(?string $panel = null): string
     {
-        return config('filament-2fa.navigation.subnav_position');
+        $panel = $panel ? Filament::getPanel($panel) : Filament::getCurrentPanel();
+        return $panel->generateRouteName(static::getRelativeRouteName());
     }
 
     public static function getRelativeRouteName(): string
@@ -92,21 +102,9 @@ class Configure extends EditProfile
         return self::$slug;
     }
 
-    public function getUser(): Authenticatable & Model
+    public function getSubNavigationPosition(): SubNavigationPosition
     {
-        $user = Filament::auth()->user();
-
-        if (! $user instanceof Model || !$user instanceof TwoFactorAuthenticatable) {
-            throw new Exception('The authenticated user must be an Eloquent model implementing TwoFactorAuthenticatable class.');
-        }
-
-        return $user;
-    }
-
-    public static function getRouteName(?string $panel = null): string
-    {
-        $panel = $panel ? Filament::getPanel($panel) : Filament::getCurrentPanel();
-        return $panel->generateRouteName(static::getRelativeRouteName());
+        return config('filament-2fa.navigation.subnav_position');
     }
 
     public function getLayout(): string
@@ -124,18 +122,9 @@ class Configure extends EditProfile
         return true;
     }
 
-    public function getFormActionsAlignment(): string | Alignment
+    public function getFormActionsAlignment(): string|Alignment
     {
         return Alignment::End;
-    }
-
-    protected function getSaveFormAction(): Action
-    {
-        return Action::make('save')
-            ->label($this->getUser()->hasTwoFactorEnabled() ? __('filament-2fa::two-factor.save_changes') : __('filament-2fa::two-factor.action_label'))
-            ->submit('save')
-            ->visible(fn()=>!$this->getUser()->hasTwoFactorEnabled())
-            ->keyBindings(['mod+s']);
     }
 
     public function getCancelFormAction(): Action
@@ -144,6 +133,15 @@ class Configure extends EditProfile
             ->label(__('filament-2fa::two-factor.back_to_dashboard'))
             ->url(Filament::getUrl())
             ->color('gray');
+    }
+
+    protected function getSaveFormAction(): Action
+    {
+        return Action::make('save')
+            ->label($this->getUser()->hasTwoFactorEnabled() ? __('filament-2fa::two-factor.save_changes') : __('filament-2fa::two-factor.action_label'))
+            ->submit('save')
+            ->visible(fn() => !$this->getUser()->hasTwoFactorEnabled())
+            ->keyBindings(['mod+s']);
     }
 
     protected function afterSave(): void
@@ -162,11 +160,11 @@ class Configure extends EditProfile
                     ->title(__('filament-2fa::two-factor.enabled'))
                     ->success()
                     ->send();
-                /**
-                 * Todo Redirect back to this page or refresh?
-                 */
-                $redirectUrl = self::$slug;
-                $this->redirect($redirectUrl, navigate: FilamentView::hasSpaMode() && is_app_url($redirectUrl));
+//                /**
+//                 * Todo Redirect back to this page or refresh?
+//                 */
+//                $redirectUrl = self::$slug;
+//                $this->redirect($redirectUrl, navigate: FilamentView::hasSpaMode() && is_app_url($redirectUrl));
             } else {
                 Notification::make()
                     ->title(__('filament-2fa::two-factor.fail_confirm'))
@@ -211,8 +209,8 @@ class Configure extends EditProfile
             ->schema([
                 Placeholder::make('2fa_info')
                     ->label(__('filament-2fa::two-factor.setup_title'))
-                    ->content(new HtmlString('<p class="text-justify">' . __('filament-2fa::two-factor.setup_message_1', ['interval' => config('two-factor.totp.seconds')]) . '</p>
-                <p class="text-justify">' . __('filament-2fa::two-factor.setup_message_2') . '</p>')),
+                    ->content(new HtmlString('<p class="text-justify">'.__('filament-2fa::two-factor.setup_message_1', ['interval' => config('two-factor.totp.seconds')]).'</p>
+                <p class="text-justify">'.__('filament-2fa::two-factor.setup_message_2').'</p>')),
 
                 Group::make()
                     ->schema([
@@ -221,7 +219,7 @@ class Configure extends EditProfile
                             ->schema([
                                 Placeholder::make('step1')
                                     ->label(false)
-                                    ->content(fn () => new HtmlString('<h3 class="text-lg font-bold text-primary">' . __('filament-2fa::two-factor.setup_step_1') . '</h3>')),
+                                    ->content(fn() => new HtmlString('<h3 class="text-lg font-bold text-primary">'.__('filament-2fa::two-factor.setup_step_1').'</h3>')),
                                 ViewField::make('2fa_auth')
                                     ->view('filament-2fa::forms.components.2fa-settings')
                                     ->viewData($this->prepareTwoFactor()),
@@ -236,7 +234,7 @@ class Configure extends EditProfile
                             ->schema([
                                 Placeholder::make('step2')
                                     ->label(false)
-                                    ->content(fn () => new HtmlString('<h3 class="text-lg font-bold text-primary">' . __('filament-2fa::two-factor.setup_step_2') . '</h3>')),
+                                    ->content(fn() => new HtmlString('<h3 class="text-lg font-bold text-primary">'.__('filament-2fa::two-factor.setup_step_2').'</h3>')),
                                 TextInput::make('2fa_code')
                                     ->label(__('filament-2fa::two-factor.confirm'))
                                     ->autofocus()
@@ -244,7 +242,7 @@ class Configure extends EditProfile
                                     ->length(config('two-factor.totp.digits'))
                                     ->autocomplete(false)
                                     ->live()
-                                    ->extraInputAttributes(['class'=>'text-center','style'=>'font-size:3em; letter-spacing:1rem'])
+                                    ->extraInputAttributes(['class' => 'text-center', 'style' => 'font-size:3em; letter-spacing:1rem'])
                                     ->afterStateUpdated(function ($state) {
                                         $requiredLength = config('two-factor.totp.digits');
                                         if (strlen($state) == $requiredLength) {
@@ -278,12 +276,32 @@ class Configure extends EditProfile
 
     protected function manage2FactorAuthGroupComponent(): Component
     {
-        return Group::make()
+        return Grid::make()
             ->schema([
                 Placeholder::make('2fa_info')
-                    ->label(fn($record) =>
-                    __('filament-2fa::two-factor.enabled_message',
-                        ['date'=>$record->enabled_at?->format(config('filament-2fa.defaultDateTimeDisplayFormat'))])),
+                    ->inlineLabel(false)
+                    ->label(fn(TwoFactorAuthentication $record) => __('filament-2fa::two-factor.enabled_message',
+                        ['date' => $record->enabled_at?->format(config('filament-2fa.defaultDateTimeDisplayFormat'))])),
+
+                Placeholder::make('trusted_devices')
+                    ->inlineLabel(false)
+                    ->label('Trusted devices')
+                    ->content(function (TwoFactorAuthentication $record) {
+                        $devices = $record->safe_devices;
+                        $items = '';
+
+                        // Iterate over each device and create an <li> element
+                        foreach ($devices as $device) {
+                            $formattedDate = Carbon::parse($device['added_at'])->format(config('filament-2fa.defaultDateTimeDisplayFormat'));
+                            $items .= "<li>{$device['ip']} added on {$formattedDate}</li>";
+                        }
+                        return new HtmlString("<ul>{$items}</ul>");
+                    })->visible(fn($record) =>
+                        $record->safe_devices
+                        && $record->safe_devices instanceof Collection
+                        && $record->safe_devices->isNotEmpty()
+                    ),
+
                 Actions::make([
                     FormAction::make('ShowRecoveryCode')
                         ->color('success')
@@ -301,6 +319,19 @@ class Configure extends EditProfile
                         })
                         ->visible($this->showRecoveryCodes)
                         ->requiresConfirmation(),
+                    FormAction::make('clearSafeDevices')
+                        ->label('Forget safe devices')
+                        ->color('warning')
+                        ->requiresConfirmation()
+                        ->icon('heroicon-m-shield-exclamation')
+                        ->modalDescription('These devices will require 2FA at next login')
+                        ->visible(fn($record) => $record->safe_devices
+                            && $record->safe_devices instanceof Collection
+                            && $record->safe_devices->isNotEmpty())
+                        ->action(function () {
+                            $this->getUser()->forgetSafeDevices();
+                            $this->js('$wire.$refresh()');
+                        }),
                     FormAction::make('disableTwoFactorAuth')
                         ->label(__('filament-2fa::two-factor.disable_2fa'))
                         ->color('danger')
@@ -319,17 +350,19 @@ class Configure extends EditProfile
                     ->visible($this->showRecoveryCodes),
 
             ])
+            ->columns(1)
             ->visible($this->getUser()->hasTwoFactorEnabled());
     }
 
     public function prepareRecoveryCodes(): HtmlString
     {
         $recoveryCodesArray = Arr::pluck($this->recoveryCodes, 'code');
-        $recoveryCodes = "<p>" . __('filament-2fa::two-factor.recovery_instruction') . "</p><ul>";
+        $recoveryCodes = "<p>".__('filament-2fa::two-factor.recovery_instruction')."</p><ul>";
         foreach ($recoveryCodesArray as $code) {
             $recoveryCodes .= "<li>$code</li>";
         }
         $recoveryCodes .= '</ul>';
         return new HtmlString($recoveryCodes);
     }
+
 }

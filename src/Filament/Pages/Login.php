@@ -37,7 +37,7 @@ class Login extends BaseLogin
             $this->storeCredentials($credentials, $remember);
             Filament::auth()->logout();
             // Regenerate session to prevent fixation
-            //session()->regenerate();
+            session()->regenerate();
             return app(TwoFactorAuthResponse::class);
         }
 
@@ -59,12 +59,9 @@ class Login extends BaseLogin
         try {
             $this->rateLimit(5);
         } catch (TooManyRequestsException $exception) {
-            // Optionally send a notification (can be omitted if not needed)
             $this->getRateLimitedNotification($exception)?->send();
-
             // Use the available property to get the number of seconds
             $this->addError('email', __('auth.throttle', ['seconds' => $exception->secondsUntilAvailable]));
-
             // Stop further execution by returning early
             return;
         }

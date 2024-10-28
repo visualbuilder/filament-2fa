@@ -3,6 +3,7 @@
 namespace Visualbuilder\Filament2fa\Http\Middleware;
 
 use Closure;
+use Filament\Facades\Filament;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 
@@ -20,7 +21,7 @@ class EnsureTwoFactorSession
         $hasPanelId = $request->session()->has("{$sessionKey}.panel_id");
 
         if (!$hasCredentials || !$hasPanelId) {
-            return redirect()->route('filament.login');
+            return redirect()->back();
         }
 
         return $next($request);
