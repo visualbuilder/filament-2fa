@@ -43,8 +43,8 @@ class Confirm2Fa extends SimplePage implements HasForms
 
     public function mount()
     {
-        [$credentials, $remember] = $this->getFlashedData();
-        if (!$credentials) {
+        [$credentials,$panelId, $remember] = $this->getFlashedData();
+        if (!$credentials || !$panelId) {
             return redirect(Filament::getLoginUrl());
         }
         // Initialize the form with default values
@@ -64,12 +64,13 @@ class Confirm2Fa extends SimplePage implements HasForms
         $sessionKey = config('filament-2fa.login.credential_key');
         $credentials = session("$sessionKey.credentials", []);
         $remember = session("$sessionKey.remember", false);
+        $panelId = session("$sessionKey.panel_id");
 
         foreach ($credentials as $index => $value) {
             $credentials[$index] = Crypt::decryptString($value);
         }
 
-        return [$credentials, $remember];
+        return [$credentials, $panelId,$remember ];
     }
 
     public function submit(): void
@@ -86,13 +87,20 @@ class Confirm2Fa extends SimplePage implements HasForms
                     'code'            => $formData['totp_code'],
                     'safeDeviceInput' => isset($formData['safe_device_enable']) ? $formData['safe_device_enable'] : false
                 ])->validate2Fa($user)) {
+                $sessionKey = config('filament-2fa.login.credential_key', '_2fa_login');
+
                 Notification::make()
                     ->title('Success')
                     ->body(__('filament-2fa::two-factor.success'))
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->send();
-                $this->redirect(Filament::getUrl());
+                
+                session()->forget("{$sessionKey}.credentials");
+                session()->forget("{$sessionKey}.remember");
+                session()->forget("{$sessionKey}.panel_id");
+
+                $this->redirectIntended(Filament::getUrl());
             } else {
                 Filament::auth()->logout();
                 session()->regenerate();
@@ -103,7 +111,10 @@ class Confirm2Fa extends SimplePage implements HasForms
 
     public function authenticate(): null|bool|Model
     {
-        [$credentials, $remember] = $this->getFlashedData();
+        [$credentials, $panelId, $remember] = $this->getFlashedData();
+
+        $panel = Filament::getPanel($panelId);
+        Filament::setCurrentPanel($panel);
 
         if (!Filament::auth()->attempt($credentials, $remember)) {
             return false;

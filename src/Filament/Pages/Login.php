@@ -36,7 +36,8 @@ class Login extends BaseLogin
         if ($this->needsTwoFactorAuthentication($user)) {
             $this->storeCredentials($credentials, $remember);
             Filament::auth()->logout();
-
+            // Regenerate session to prevent fixation
+            //session()->regenerate();
             return app(TwoFactorAuthResponse::class);
         }
 
@@ -78,6 +79,21 @@ class Login extends BaseLogin
     }
 
     /**
+     * Handle two-factor authentication if required.
+     */
+    protected function handleTwoFactorAuthentication(Authenticatable $user, array $credentials, bool $remember): ?TwoFactorAuthResponse
+    {
+        if ($this->needsTwoFactorAuthentication($user)) {
+            $this->storeCredentials($credentials, $remember);
+            Filament::auth()->logout();
+
+            return app(TwoFactorAuthResponse::class);
+        }
+
+        return null;
+    }
+
+    /**
      * Determine if two-factor authentication is required.
      */
     protected function needsTwoFactorAuthentication(Authenticatable $user): bool
@@ -109,6 +125,7 @@ class Login extends BaseLogin
         $sessionData = [
             'credentials' => $encryptedCredentials,
             'remember' => $remember,
+            'panel_id' => Filament::getCurrentPanel()->getId(),
         ];
 
         $credentialKey = config('filament-2fa.login.credential_key');

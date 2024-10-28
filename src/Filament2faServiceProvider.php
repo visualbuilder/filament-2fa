@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Visualbuilder\Filament2fa\Http\Middleware\EnsureTwoFactorSession;
 
 
 class Filament2faServiceProvider extends PackageServiceProvider
@@ -67,5 +68,15 @@ class Filament2faServiceProvider extends PackageServiceProvider
             base_path('vendor/laragear/two-factor/config/two-factor.php') => base_path('config/two-factor.php'),
             base_path('config/filament-2fa.php') => base_path('config/filament-2fa.php'),
         ]);
+    }
+
+    public function boot()
+    {
+        parent::boot();
+
+        /**
+         * Add middleware to ensure 2fa confirmation is only loaded when we have valid session credentials
+         */
+        app('router')->aliasMiddleware('2fa.is_login_session',EnsureTwoFactorSession::class);
     }
 }
