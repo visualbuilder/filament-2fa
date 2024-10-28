@@ -123,7 +123,7 @@ class Confirm2Fa extends SimplePage implements HasForms
         $user = Filament::auth()->user();
 
         if (!$user instanceof Model) {
-            throw new Exception('The authenticated user object must be an Eloquent model to allow the profile page to update it.');
+            throw new Exception('The authenticated user object must be an Eloquent model to login.');
         }
 
         return $user;
