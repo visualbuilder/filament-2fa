@@ -57,6 +57,6 @@ class SetRenderLocation
     {
         $bannerManageUrl = config('filament-2fa.banner.navigation.url');
         return !$request->is($bannerManageUrl) && !$request->is("$bannerManageUrl/*") &&
-        !$request->is(...config('filament-2fa.banner.exclude_routes'));
+        !$request->is(...config('filament-2fa.banner.excluded_routes'));
     }
 }

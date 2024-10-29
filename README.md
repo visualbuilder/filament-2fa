@@ -148,7 +148,7 @@ use Filament\Pages\SubNavigationPosition;
 return [
     'defaultDateTimeDisplayFormat'  => 'd M Y H:i',
 
-    'exclude_routes' => [
+    'excluded_routes' => [
         'two-factor-authentication',
         'confirm-2fa',
         'logout',

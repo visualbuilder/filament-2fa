@@ -29,7 +29,7 @@ class RedirectIfTwoFactorNotActivated
             && Arr::has($authGuards, $authGuard)
             && $authGuards[$authGuard]['mandatory']
             && !$user->hasTwoFactorEnabled()
-            && !$request->is(...config('filament-2fa.exclude_routes'));
+            && !$request->is(...config('filament-2fa.excluded_routes'));
     }
 
     private function handle2FARedirection(Request $request)

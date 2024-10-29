@@ -8,7 +8,7 @@ return [
     /**
      * When two factor is required exclude these routes from redirect
      */
-    'exclude_routes' => [
+    'excluded_routes' => [
         'two-factor-authentication',
         'confirm-2fa',
         'logout',
