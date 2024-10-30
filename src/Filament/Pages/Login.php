@@ -95,7 +95,10 @@ class Login extends BaseLogin
      */
     protected function needsTwoFactorAuthentication(Authenticatable $user): bool
     {
+        $authGuard = Filament::getAuthGuard();
         return $user instanceof TwoFactorAuthenticatable
+            && array_key_exists($authGuard, config('filament-2fa.auth_guards'))
+            && config("filament-2fa.auth_guards.$authGuard.enabled")
             && $user->hasTwoFactorEnabled()
             && ! $user->isSafeDevice(request());
     }
