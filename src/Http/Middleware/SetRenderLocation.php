@@ -35,14 +35,24 @@ class SetRenderLocation
         return $next($request);
     }
 
+
     private function filterBannersForUser($banners, $user)
     {
         return $banners->filter(function (Banner $banner) use ($user) {
+            $is2FAEnabledForGuard = $this->isTwoFaEnabledForCurrentGuard();
             return $banner->isVisible()
                 && $banner->isApplicableForUser($user)
                 && $banner->checkGuard()
-                && $this->checkCurrentAuth();
+                && $this->checkCurrentAuth()
+                && (!$banner->is_2fa_setup || $is2FAEnabledForGuard);
         });
+    }
+
+    private function isTwoFaEnabledForCurrentGuard()
+    {
+        $authGuards = config('filament-2fa.auth_guards');
+        $currentGuard = Filament::getAuthGuard();
+        return Arr::has($authGuards, $currentGuard) && $authGuards[$currentGuard]['enabled'];
     }
 
     private function checkCurrentAuth()
