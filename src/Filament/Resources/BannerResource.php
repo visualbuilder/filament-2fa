@@ -2,6 +2,7 @@
 
 namespace Visualbuilder\Filament2fa\Filament\Resources;
 
+use ReflectionClass;
 use Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages;
 use Filament\Forms\Components\Actions\Action as ComponentAction;
 use Filament\Facades\Filament;
@@ -329,47 +330,12 @@ class BannerResource extends Resource
 
     private static function renderLocations($location = null)
     {
-        $locations = [
-            'Panel' => [
-                PanelsRenderHook::BODY_START => 'Header',
-                PanelsRenderHook::PAGE_START => 'Page Start',
-                PanelsRenderHook::PAGE_END => 'Page End',
-            ],
-            'Authentication' => [
-                PanelsRenderHook::AUTH_LOGIN_FORM_BEFORE => 'Before login Form',
-                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER => 'After login form',
-                PanelsRenderHook::AUTH_PASSWORD_RESET_RESET_FORM_BEFORE => 'Before reset password form',
-                PanelsRenderHook::AUTH_PASSWORD_RESET_RESET_FORM_AFTER => 'After reset password form',
-                PanelsRenderHook::AUTH_REGISTER_FORM_BEFORE => 'Before register form',
-                PanelsRenderHook::AUTH_REGISTER_FORM_AFTER => 'After register form',
-            ],
-            'Global search' => [
-                PanelsRenderHook::GLOBAL_SEARCH_BEFORE => 'Before global search',
-                PanelsRenderHook::GLOBAL_SEARCH_AFTER => 'After global search',
-            ],
-            'Page Widgets' => [
-                PanelsRenderHook::PAGE_HEADER_WIDGETS_BEFORE => 'Before header widgets',
-                PanelsRenderHook::PAGE_HEADER_WIDGETS_AFTER => 'After header widgets',
-                PanelsRenderHook::PAGE_FOOTER_WIDGETS_BEFORE => 'Before footer widgets',
-                PanelsRenderHook::PAGE_FOOTER_WIDGETS_AFTER => 'After footer widgets',
-            ],
-            'Sidebar' => [
-                PanelsRenderHook::SIDEBAR_NAV_START => 'Before sidebar navigation',
-                PanelsRenderHook::SIDEBAR_NAV_END => 'After sidebar navigation',
-            ],
-            'Resource Table' => [
-                PanelsRenderHook::RESOURCE_PAGES_LIST_RECORDS_TABLE_BEFORE => 'Before resource table',
-                PanelsRenderHook::RESOURCE_PAGES_LIST_RECORDS_TABLE_AFTER =>'After resource table',
-            ],
-        ];
-        if ($location) {
-            foreach ($locations as $category) {
-                if (array_key_exists($location, $category)) {
-                    return $category[$location];
-                }
-            }
-            return null;  // Return null if no matching location is found
+        $class = new ReflectionClass(PanelsRenderHook::class);
+        $hooks =  $class->getConstants();
+
+        if ($location && array_key_exists($location, $hooks)) {
+            return $hooks[$location];
         }
-        return $locations;
+        return $hooks;
     }
 }
