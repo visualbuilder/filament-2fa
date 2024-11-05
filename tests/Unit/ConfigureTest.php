@@ -10,18 +10,16 @@ it('can access configure page by user', function () {
     )->get(Configure::getUrl())->assertSuccessful();
 });
 
-it('can see 2fa confirm code & validateion', function () {
+it('can see 2fa confirm code & validation', function () {
     $user = $this->createUser();
     $this->actingAs($user);
     livewire(Configure::class)
         ->refresh()
         ->assertFormExists()
         ->assertFormFieldExists('twoFactorAuth.2fa_code')
-        ->fillForm([
-            'twoFactorAuth.2fa_code' => mt_rand(100000,999999)
-        ])
+        ->fillForm(['twoFactorAuth.2fa_code' => mt_rand(100000, 999999)])
         ->call('save')
-        ->assertHasNoFormErrors();
+        ->assertHasFormErrors(['twoFactorAuth.2fa_code']);
 });
 
 it('can enable two factor authentication', function () {
