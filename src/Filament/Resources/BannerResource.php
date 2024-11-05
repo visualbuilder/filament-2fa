@@ -63,123 +63,123 @@ class BannerResource extends Resource
         return $form
             ->schema([
                 Section::make()->schema([
-                Tabs::make('Tabs')
-                    ->tabs([
-                        Tab::make('General')
-                            ->icon('heroicon-m-wrench')
-                            ->schema([
-                                TextInput::make('name')->required(),
-                                Select::make('auth_guards')
-                                    ->required()
-                                    ->multiple()
-                                    ->hintAction(ComponentAction::make('help')
-                                        ->icon('heroicon-o-question-mark-circle')
-                                        ->extraAttributes(['class' => 'text-gray-500'])
-                                        ->tooltip('This banner only visible on selected Auth Panels(guards)'))
-                                    ->options(self::getAuthGuards()),
-                                RichEditor::make('content')
-                                    ->required()
-                                    ->toolbarButtons([
-                                        'bold',
-                                        'italic',
-                                        'link',
-                                        'strike',
-                                        'underline',
-                                        'undo',
-                                        'codeBlock',
-                                    ]),
-                                Select::make('render_location')
-                                    ->searchable()
-                                    ->required()
-                                    ->hintAction(ComponentAction::make('help')
-                                        ->icon('heroicon-o-question-mark-circle')
-                                        ->extraAttributes(['class' => 'text-gray-500'])
-                                        ->label('')
-                                        ->tooltip('With render location, you can select where a banner is rendered on the page. In combination with scopes, this becomes a powerful tool to manage where and when your banners are displayed. You can choose to render banners in the header, sidebar, or other strategic locations to maximize their visibility and impact.'))
-                                    ->options(self::renderLocations()),
+                    Tabs::make('Tabs')
+                        ->tabs([
+                            Tab::make('General')
+                                ->icon('heroicon-m-wrench')
+                                ->schema([
+                                    TextInput::make('name')->required(),
+                                    Select::make('auth_guards')
+                                        ->required()
+                                        ->multiple()
+                                        ->hintAction(ComponentAction::make('help')
+                                            ->icon('heroicon-o-question-mark-circle')
+                                            ->extraAttributes(['class' => 'text-gray-500'])
+                                            ->tooltip('This banner only visible on selected Auth Panels(guards)'))
+                                        ->options(self::getAuthGuards()),
+                                    RichEditor::make('content')
+                                        ->required()
+                                        ->toolbarButtons([
+                                            'bold',
+                                            'italic',
+                                            'link',
+                                            'strike',
+                                            'underline',
+                                            'undo',
+                                            'codeBlock',
+                                        ]),
+                                    Select::make('render_location')
+                                        ->searchable()
+                                        ->required()
+                                        ->hintAction(ComponentAction::make('help')
+                                            ->icon('heroicon-o-question-mark-circle')
+                                            ->extraAttributes(['class' => 'text-gray-500'])
+                                            ->label('')
+                                            ->tooltip('With render location, you can select where a banner is rendered on the page. In combination with scopes, this becomes a powerful tool to manage where and when your banners are displayed. You can choose to render banners in the header, sidebar, or other strategic locations to maximize their visibility and impact.'))
+                                        ->options(self::renderLocations()),
 
-                                Select::make('scope')
-                                    ->hintAction(ComponentAction::make('help')
-                                        ->icon('heroicon-o-question-mark-circle')
-                                        ->label('')
-                                        ->extraAttributes(['class' => 'text-gray-500'])
-                                        ->tooltip('With scoping, you can control where your banner is displayed. You can target your banner to specific pages or entire resources, ensuring it is shown to the right audience at the right time.'))
-                                    ->searchable()
-                                    ->multiple()
-                                    ->options(fn () => self::getScopes()),
-                                Fieldset::make('Options')
-                                    ->schema([
-                                        Checkbox::make('is_2fa_setup')
-                                            ->label('Show when 2fa is optional and not setup yet')
-                                            ->columnSpan('full'),
-                                        Checkbox::make('can_be_closed_by_user')
-                                            ->label('User can dismiss banner')
-                                            ->columnSpan('full'),
-                                        Checkbox::make('can_truncate_message')
-                                            ->label('Allow long messages to be truncated to fit on a small screen')
-                                            ->columnSpan('full'),
-                                    ]),
-                                Toggle::make('is_active'),
-                            ]),
-                        Tab::make('Styling')
-                            ->icon('heroicon-m-paint-brush')
-                            ->schema([
-                                ColorPicker::make('text_color')
-                                    ->default('#FFFFFF')
-                                    ->required(),
-                                Fieldset::make('Icon')
-                                    ->schema([
-                                        TextInput::make('icon')
-                                            ->default('heroicon-m-megaphone')
-                                            ->placeholder('heroicon-m-wrench'),
-                                        ColorPicker::make('icon_color')
-                                            ->default('#fafafa')
-                                            ->required(),
-                                    ])
-                                    ->columns(3),
-                                Fieldset::make('background')
-                                    ->schema([
-                                        Select::make('background_type')
-                                            ->reactive()
-                                            ->selectablePlaceholder(false)
-                                            ->default('solid')
-                                            ->options([
-                                                'solid' => 'Solid',
-                                                'gradient' => 'Gradient',
-                                            ])->default('solid'),
-                                        ColorPicker::make('start_color')
-                                            ->default('#D97706')
-                                            ->required(),
-                                        ColorPicker::make('end_color')
-                                            ->default('#F59E0C')
-                                            ->visible(fn ($get) => $get('background_type') === 'gradient'),
-                                    ])
-                                    ->columns(3),
-                            ]),
-                        Tab::make('Scheduling')
-                            ->reactive()
-                            ->icon('heroicon-m-clock')
-                            ->badgeIcon('heroicon-m-eye')
-                            ->badge(fn ($get) => self::calculateScheduleStatus($get('start_time'), $get('end_time')))
-                            ->schema([
-                                DateTimePicker::make('start_time')
-                                    ->hintAction(
-                                        ComponentAction::make('reset')
-                                            ->icon('heroicon-m-arrow-uturn-left')
-                                            ->action(function (Set $set) {
-                                                $set('start_time', null);
-                                            })
-                                    ),
-                                DateTimePicker::make('end_time')
-                                    ->hintAction(
-                                        ComponentAction::make('reset')
-                                            ->icon('heroicon-m-arrow-uturn-left')
-                                            ->action(function (Set $set) {
-                                                $set('end_time', null);
-                                            })
-                                    ),
-                            ])->hidden(false),
-                    ])->contained(false),
+                                    Select::make('scope')
+                                        ->hintAction(ComponentAction::make('help')
+                                            ->icon('heroicon-o-question-mark-circle')
+                                            ->label('')
+                                            ->extraAttributes(['class' => 'text-gray-500'])
+                                            ->tooltip('With scoping, you can control where your banner is displayed. You can target your banner to specific pages or entire resources, ensuring it is shown to the right audience at the right time.'))
+                                        ->searchable()
+                                        ->multiple()
+                                        ->options(fn() => self::getScopes()),
+                                    Fieldset::make('Options')
+                                        ->schema([
+                                            Checkbox::make('is_2fa_setup')
+                                                ->label('Show when 2fa is optional and not setup yet')
+                                                ->columnSpan('full'),
+                                            Checkbox::make('can_be_closed_by_user')
+                                                ->label('User can dismiss banner')
+                                                ->columnSpan('full'),
+                                            Checkbox::make('can_truncate_message')
+                                                ->label('Allow long messages to be truncated to fit on a small screen')
+                                                ->columnSpan('full'),
+                                        ]),
+                                    Toggle::make('is_active'),
+                                ]),
+                            Tab::make('Styling')
+                                ->icon('heroicon-m-paint-brush')
+                                ->schema([
+                                    ColorPicker::make('text_color')
+                                        ->default('#FFFFFF')
+                                        ->required(),
+                                    Fieldset::make('Icon')
+                                        ->schema([
+                                            TextInput::make('icon')
+                                                ->default('heroicon-m-megaphone')
+                                                ->placeholder('heroicon-m-wrench'),
+                                            ColorPicker::make('icon_color')
+                                                ->default('#fafafa')
+                                                ->required(),
+                                        ])
+                                        ->columns(3),
+                                    Fieldset::make('background')
+                                        ->schema([
+                                            Select::make('background_type')
+                                                ->reactive()
+                                                ->selectablePlaceholder(false)
+                                                ->default('solid')
+                                                ->options([
+                                                    'solid' => 'Solid',
+                                                    'gradient' => 'Gradient',
+                                                ])->default('solid'),
+                                            ColorPicker::make('start_color')
+                                                ->default('#D97706')
+                                                ->required(),
+                                            ColorPicker::make('end_color')
+                                                ->default('#F59E0C')
+                                                ->visible(fn($get) => $get('background_type') === 'gradient'),
+                                        ])
+                                        ->columns(3),
+                                ]),
+                            Tab::make('Scheduling')
+                                ->reactive()
+                                ->icon('heroicon-m-clock')
+                                ->badgeIcon('heroicon-m-eye')
+                                ->badge(fn($get) => self::calculateScheduleStatus($get('start_time'), $get('end_time')))
+                                ->schema([
+                                    DateTimePicker::make('start_time')
+                                        ->hintAction(
+                                            ComponentAction::make('reset')
+                                                ->icon('heroicon-m-arrow-uturn-left')
+                                                ->action(function (Set $set) {
+                                                    $set('start_time', null);
+                                                })
+                                        ),
+                                    DateTimePicker::make('end_time')
+                                        ->hintAction(
+                                            ComponentAction::make('reset')
+                                                ->icon('heroicon-m-arrow-uturn-left')
+                                                ->action(function (Set $set) {
+                                                    $set('end_time', null);
+                                                })
+                                        ),
+                                ])->hidden(false),
+                        ])->contained(false),
                 ])
             ]);
     }
@@ -191,7 +191,7 @@ class BannerResource extends Resource
                 TextColumn::make('name')->searchable(),
                 TextColumn::make('auth_guards')->searchable(),
                 TextColumn::make('render_location')
-                    ->formatStateUsing(fn (string $state): string => self::renderLocations($state) ),
+                    ->formatStateUsing(fn(string $state) => self::renderLocation($state)),
                 IconColumn::make('can_be_closed_by_user')->label('Dismissable')->alignCenter(),
                 IconColumn::make('is_2fa_setup')->label('2FA Banner')->alignCenter(),
                 IconColumn::make('is_active')->alignCenter()
@@ -210,12 +210,12 @@ class BannerResource extends Resource
                         ->color('warning')
                         ->icon('heroicon-m-x-circle')
                         ->requiresConfirmation()
-                        ->action(fn (Collection $records) => $records->each->update(['is_active' => false])),
+                        ->action(fn(Collection $records) => $records->each->update(['is_active' => false])),
                     Tables\Actions\BulkAction::make('enableSelected')
                         ->color('success')
                         ->icon('heroicon-m-check-badge')
                         ->requiresConfirmation()
-                        ->action(fn (Collection $records) => $records->each->update(['is_active' => true]))
+                        ->action(fn(Collection $records) => $records->each->update(['is_active' => true]))
                 ]),
             ]);
     }
@@ -255,7 +255,7 @@ class BannerResource extends Resource
     }
 
     /**
-     * @param  resource  $resourceClass
+     * @param resource $resourceClass
      * @return string[]
      */
     private static function getPagesForResource($resourceClass): array
@@ -276,7 +276,7 @@ class BannerResource extends Resource
         return array_values(Filament::getCurrentPanel()->getResources());
     }
 
-    private static function calculateScheduleStatus($start_time, $end_time): ScheduleStatus | string
+    private static function calculateScheduleStatus($start_time, $end_time): ScheduleStatus|string
     {
 
         if (is_null($start_time) && is_null($end_time)) {
@@ -323,19 +323,20 @@ class BannerResource extends Resource
 
     private static function getAuthGuards()
     {
-        $filteredGuards = Arr::where(config('filament-2fa.banner.auth_guards'), fn (array $value, string $key) => (bool)$value['can_see_banner'] === true);
+        $filteredGuards = Arr::where(config('filament-2fa.banner.auth_guards'), fn(array $value, string $key) => (bool)$value['can_see_banner'] === true);
         [$keys, $values] = Arr::divide($filteredGuards);
-        return array_combine(array_values($keys),array_values($keys));
+        return array_combine(array_values($keys), array_values($keys));
     }
 
-    private static function renderLocations($location = null)
+    private static function renderLocations(): array
     {
-        $class = new ReflectionClass(PanelsRenderHook::class);
-        $hooks =  $class->getConstants();
+        return (new ReflectionClass(PanelsRenderHook::class))->getConstants();
+    }
 
-        if ($location && array_key_exists($location, $hooks)) {
-            return $hooks[$location];
-        }
-        return $hooks;
+    private static function renderLocation(string $location): string
+    {
+        $locations = self::renderLocations();
+
+        return array_key_exists($location, $locations) ? $locations[$location] : '';
     }
 }
