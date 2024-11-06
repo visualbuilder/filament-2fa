@@ -6,15 +6,21 @@ use Laragear\TwoFactor\Models\TwoFactorAuthentication;
 use Visualbuilder\Filament2fa\Filament\Pages\Login;
 use Visualbuilder\Filament2fa\Livewire\Confirm2Fa;
 
-
 use function Pest\Livewire\livewire;
 
-it('check confirm page without login credentials', function () {
+it('check confirm page without login credentials redirects to previous url', function () {
+    $previous_url = url()->previous();
+    $this->get(url(config('filament-2fa.login.confirm_totp_page_url')))
+        ->assertRedirect($previous_url);
+
+    $this->get(Filament::getLoginUrl())
+        ->assertSuccessful();
+
     $this->get(url(config('filament-2fa.login.confirm_totp_page_url')))
         ->assertRedirect(Filament::getLoginUrl());
 });
 
-it('check encrypted credentiasl are stored on sessions', function () {
+it('check encrypted credentials are stored on sessions', function () {
     $user = $this->createUser();
     $user->twoFactorAuth()->save(
         TwoFactorAuthentication::factory()->make()
@@ -28,11 +34,11 @@ it('check encrypted credentiasl are stored on sessions', function () {
             'password' => 'password'
         ])
         ->call('authenticate')
-        ->assertRedirect('/confirm-2fa');
+        ->assertRedirect(config('filament-2fa.login.confirm_totp_page_url'));
 
     $sessionKey = config('filament-2fa.login.credential_key');
     $credentials = session("$sessionKey.credentials", []);
-    expect(Crypt::decryptString($credentials['email']) )->toEqual($loginEmail);
+    expect(Crypt::decryptString($credentials['email']))->toEqual($loginEmail);
     livewire(Confirm2Fa::class)
         ->assertFormFieldExists('totp_code')
         ->assertFormExists();
@@ -52,11 +58,11 @@ it('Confirm 2FA TOTP code check validation errors', function () {
             'password' => 'password'
         ])
         ->call('authenticate')
-        ->assertRedirect('/confirm-2fa');
+        ->assertRedirect(config('filament-2fa.login.confirm_totp_page_url'));
 
     $sessionKey = config('filament-2fa.login.credential_key');
     $credentials = session("$sessionKey.credentials", []);
-    expect(Crypt::decryptString($credentials['email']) )->toEqual($loginEmail);
+    expect(Crypt::decryptString($credentials['email']))->toEqual($loginEmail);
 
     livewire(Confirm2Fa::class)
         ->assertFormExists()
@@ -88,11 +94,11 @@ it('Confirm 2FA TOTP code', function () {
             'password' => 'password'
         ])
         ->call('authenticate')
-        ->assertRedirect('/confirm-2fa');
+        ->assertRedirect(config('filament-2fa.login.confirm_totp_page_url'));
 
     $sessionKey = config('filament-2fa.login.credential_key');
     $credentials = session("$sessionKey.credentials", []);
-    expect(Crypt::decryptString($credentials['email']) )->toEqual($loginEmail);
+    expect(Crypt::decryptString($credentials['email']))->toEqual($loginEmail);
     livewire(Confirm2Fa::class)
         ->fillForm([
             'totp_code' => $user->makeTwoFactorCode()
