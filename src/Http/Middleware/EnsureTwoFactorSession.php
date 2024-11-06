@@ -21,7 +21,7 @@ class EnsureTwoFactorSession
         $hasPanelId = $request->session()->has("{$sessionKey}.panel_id");
 
         if (!$hasCredentials || !$hasPanelId) {
-            return redirect()->back();
+            return redirect()->to(Filament::getLoginUrl());
         }
 
         return $next($request);

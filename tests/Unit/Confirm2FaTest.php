@@ -8,14 +8,7 @@ use Visualbuilder\Filament2fa\Livewire\Confirm2Fa;
 
 use function Pest\Livewire\livewire;
 
-it('check confirm page without login credentials redirects to previous url', function () {
-    $previous_url = url()->previous();
-    $this->get(url(config('filament-2fa.login.confirm_totp_page_url')))
-        ->assertRedirect($previous_url);
-
-    $this->get(Filament::getLoginUrl())
-        ->assertSuccessful();
-
+it('check confirm page without login credentials', function () {
     $this->get(url(config('filament-2fa.login.confirm_totp_page_url')))
         ->assertRedirect(Filament::getLoginUrl());
 });
