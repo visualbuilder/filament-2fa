@@ -46,12 +46,20 @@ class Filament2faServiceProvider extends PackageServiceProvider
 
     protected function publishMigrations()
     {
-        $files = Collection::make(File::files(base_path('vendor/laragear/two-factor/database/migrations')))
+        $path = __DIR__ . '/../vendor/laragear/two-factor/database/migrations';
+
+        if (!is_dir($path)) {
+            // Don't throw if the package isn't installed or path is invalid in CI
+            return;
+        }
+
+        $files = Collection::make(File::files($path))
             ->mapWithKeys(fn(\SplFileInfo $file): array => [
                 $file->getRealPath() => Str::of($file->getFileName())
                     ->prepend($this->app->databasePath('migrations/'))
                     ->toString(),
             ]);
+
         $this->publishes($files->toArray(), 'filament-2fa-migrations');
     }
 
