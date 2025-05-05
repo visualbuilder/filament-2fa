@@ -18,11 +18,6 @@ class Login extends BaseLogin
     {
         $this->handleRateLimiting();
 
-        // Stop execution if there are validation errors
-        if ($this->getErrorBag()->isNotEmpty()) {
-            return null;
-        }
-
         $data = $this->form->getState();
         $credentials = $this->getCredentialsFromFormData($data);
         $remember = $data['remember'] ?? false;
