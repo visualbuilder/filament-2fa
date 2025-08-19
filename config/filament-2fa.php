@@ -1,6 +1,6 @@
 <?php
 
-use Filament\Pages\SubNavigationPosition;
+use Filament\Pages\Enums\SubNavigationPosition;
 
 return [
     'defaultDateTimeDisplayFormat'  => 'd M Y H:i',
