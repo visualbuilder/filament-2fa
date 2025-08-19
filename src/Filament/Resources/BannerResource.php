@@ -2,6 +2,7 @@
 
 namespace Visualbuilder\Filament2fa\Filament\Resources;
 
+use Filament\Panel;
 use ReflectionClass;
 use Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages;
 use Filament\Forms\Components\Actions\Action as ComponentAction;
@@ -39,7 +40,7 @@ class BannerResource extends Resource
 
     protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    public static function getSlug(): string
+    public static function getSlug(?Panel $panel = null): string
     {
         return config('filament-2fa.banner.navigation.url');
     }
