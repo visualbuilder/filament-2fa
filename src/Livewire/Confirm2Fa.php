@@ -25,7 +25,7 @@ class Confirm2Fa extends SimplePage implements HasForms
 
     public static ?string $title = 'Confirm your 2FA code';
 
-    protected static string $view = 'filament-2fa::livewire.confirm2-fa';
+    protected string $view = 'filament-2fa::livewire.confirm2-fa';
 
     public bool $safe_device_enable = true;
 

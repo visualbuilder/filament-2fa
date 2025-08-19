@@ -31,12 +31,13 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
 use Visualbuilder\Filament2fa\Enums\ScheduleStatus;
 use Visualbuilder\Filament2fa\Models\Banner;
+use BackedEnum;
 
 class BannerResource extends Resource
 {
     protected static ?string $model = Banner::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function getSlug(): string
     {
