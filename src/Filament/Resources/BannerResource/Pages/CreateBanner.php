@@ -3,9 +3,8 @@
 namespace Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages;
 
 use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
-use Filament\Support\Enums\MaxWidth;
+use Filament\Support\Enums\Width;
 
 class CreateBanner extends CreateRecord
 {
@@ -15,7 +14,7 @@ class CreateBanner extends CreateRecord
     {
         return [
             'hasTopbar' => true,
-            'maxWidth' => MaxWidth::SixExtraLarge,
+            'maxWidth' => Width::SixExtraLarge,
         ];
     }
 

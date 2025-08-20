@@ -15,17 +15,17 @@ use function validator;
 
 class FilamentTwoFactor extends TwoFactor
 {
-    /**
-     * Creates a new Laraguard instance.
-     */
-    public function __construct(
-        protected Repository $config,
-        protected Request $request,
-        protected string $code,
-        protected string $safeDeviceInput,
-    ) {
-        //
-    }
+//    /**
+//     * Creates a new Laraguard instance.
+//     */
+//    public function __construct(
+//        protected Repository $config,
+//        protected Request $request,
+//        protected string $input,
+//        protected string $safeDeviceInput,
+//    ) {
+//
+//    }
 
 
     public function validate2Fa(Authenticatable $user)

@@ -5,19 +5,17 @@ namespace Visualbuilder\Filament2fa\Filament\Pages;
 use Carbon\Carbon;
 use Exception;
 use Filament\Actions\Action;
+use Filament\Auth\Pages\EditProfile;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Actions;
-use Filament\Forms\Components\Actions\Action as FormAction;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Components\Grid;
-use Filament\Forms\Components\Group;
-use Filament\Forms\Components\Placeholder;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\ViewField;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
-use Filament\Pages\Auth\EditProfile;
-use Filament\Pages\SubNavigationPosition;
+use Filament\Pages\Enums\SubNavigationPosition;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
+use Filament\Schemas\Components\Section;
 use Filament\Support\Enums\Alignment;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Support\Htmlable;
@@ -34,7 +32,7 @@ class Configure extends EditProfile
 
     public static ?string $slug = 'two-factor-authentication';
 
-    public ?string $maxWidth = '6xl';
+    public string|\Filament\Support\Enums\Width|null $maxWidth = '6xl';
 
     public Collection|array $recoveryCodes;
 
@@ -91,13 +89,13 @@ class Configure extends EditProfile
         return config('filament-2fa.navigation.sort_no');
     }
 
-    public static function getRouteName(?string $panel = null): string
+    public static function getRouteName(string|\Filament\Panel|null $panel = null): string
     {
         $panel = $panel ? Filament::getPanel($panel) : Filament::getCurrentPanel();
         return $panel->generateRouteName(static::getRelativeRouteName());
     }
 
-    public static function getRelativeRouteName(): string
+    public static function getRelativeRouteName(\Filament\Panel $panel = null): string
     {
         return self::$slug;
     }
@@ -191,7 +189,7 @@ class Configure extends EditProfile
         ];
     }
 
-    protected function getTwoFactorAuthFormComponent(): Component
+    protected function getTwoFactorAuthFormComponent(): Section
     {
         return Section::make(__('filament-2fa::two-factor.profile_title'))
             ->icon('heroicon-o-shield-check')
@@ -203,13 +201,13 @@ class Configure extends EditProfile
             ]);
     }
 
-    protected function enable2FactorAuthGroupComponent(): Component
+    protected function enable2FactorAuthGroupComponent(): Group
     {
         return Group::make()
             ->schema([
-                Placeholder::make('2fa_info')
+                TextEntry::make('2fa_info')
                     ->label(__('filament-2fa::two-factor.setup_title'))
-                    ->content(new HtmlString('<p class="text-justify">'.__('filament-2fa::two-factor.setup_message_1', ['interval' => config('two-factor.totp.seconds')]).'</p>
+                    ->state(new HtmlString('<p class="text-justify">'.__('filament-2fa::two-factor.setup_message_1', ['interval' => config('two-factor.totp.seconds')]).'</p>
                 <p class="text-justify">'.__('filament-2fa::two-factor.setup_message_2').'</p>')),
 
                 Group::make()
@@ -217,9 +215,9 @@ class Configure extends EditProfile
                         // Step 1 - Left Column
                         Group::make()
                             ->schema([
-                                Placeholder::make('step1')
+                                TextEntry::make('step1')
                                     ->label(false)
-                                    ->content(fn() => new HtmlString('<h3 class="text-lg font-bold text-primary">'.__('filament-2fa::two-factor.setup_step_1').'</h3>')),
+                                    ->state(fn() => new HtmlString('<h3 class="text-lg font-bold text-primary">'.__('filament-2fa::two-factor.setup_step_1').'</h3>')),
                                 ViewField::make('2fa_auth')
                                     ->view('filament-2fa::forms.components.2fa-settings')
                                     ->viewData($this->prepareTwoFactor()),
@@ -232,9 +230,9 @@ class Configure extends EditProfile
                         // Step 2 and Confirm - Right Column
                         Group::make()
                             ->schema([
-                                Placeholder::make('step2')
+                                TextEntry::make('step2')
                                     ->label(false)
-                                    ->content(fn() => new HtmlString('<h3 class="text-lg font-bold text-primary">'.__('filament-2fa::two-factor.setup_step_2').'</h3>')),
+                                    ->state(fn() => new HtmlString('<h3 class="text-lg font-bold text-primary">'.__('filament-2fa::two-factor.setup_step_2').'</h3>')),
                                 TextInput::make('2fa_code')
                                     ->label(__('filament-2fa::two-factor.confirm'))
                                     ->autofocus()
@@ -274,19 +272,19 @@ class Configure extends EditProfile
         ];
     }
 
-    protected function manage2FactorAuthGroupComponent(): Component
+    protected function manage2FactorAuthGroupComponent(): Grid
     {
         return Grid::make()
             ->schema([
-                Placeholder::make('2fa_info')
+                TextEntry::make('2fa_info')
                     ->inlineLabel(false)
                     ->label(fn(TwoFactorAuthentication $record) => __('filament-2fa::two-factor.enabled_message',
                         ['date' => $record->enabled_at?->format(config('filament-2fa.defaultDateTimeDisplayFormat'))])),
 
-                Placeholder::make('trusted_devices')
+                TextEntry::make('trusted_devices')
                     ->inlineLabel(false)
                     ->label('Trusted devices')
-                    ->content(function (TwoFactorAuthentication $record) {
+                    ->state(function (TwoFactorAuthentication $record) {
                         $devices = $record->safe_devices;
                         $items = '';
 
@@ -303,7 +301,7 @@ class Configure extends EditProfile
                     ),
 
                 Actions::make([
-                    FormAction::make('ShowRecoveryCode')
+                    Action::make('ShowRecoveryCode')
                         ->color('success')
                         ->icon($this->showRecoveryCodes ? 'heroicon-m-eye-slash' : 'heroicon-m-eye')
                         ->label($this->showRecoveryCodes ? __('filament-2fa::two-factor.hide_recovery_code') : __('filament-2fa::two-factor.show_recovery_code'))
@@ -311,7 +309,7 @@ class Configure extends EditProfile
                             $this->showRecoveryCodes = !$this->showRecoveryCodes;
                             $this->js('$wire.$refresh()');
                         }),
-                    FormAction::make('GenerateRecoveryCode')
+                    Action::make('GenerateRecoveryCode')
                         ->icon('heroicon-m-key')
                         ->label(__('filament-2fa::two-factor.generate_recovery_code'))
                         ->action(function () {
@@ -319,7 +317,7 @@ class Configure extends EditProfile
                         })
                         ->visible($this->showRecoveryCodes)
                         ->requiresConfirmation(),
-                    FormAction::make('clearSafeDevices')
+                    Action::make('clearSafeDevices')
                         ->label('Forget safe devices')
                         ->color('warning')
                         ->requiresConfirmation()
@@ -332,7 +330,7 @@ class Configure extends EditProfile
                             $this->getUser()->forgetSafeDevices();
                             $this->js('$wire.$refresh()');
                         }),
-                    FormAction::make('disableTwoFactorAuth')
+                    Action::make('disableTwoFactorAuth')
                         ->label(__('filament-2fa::two-factor.disable_2fa'))
                         ->color('danger')
                         ->requiresConfirmation()
@@ -344,9 +342,9 @@ class Configure extends EditProfile
                             $this->save();
                         }),
                 ]),
-                Placeholder::make('recovery_code')
+                TextEntry::make('recovery_code')
                     ->label('')
-                    ->content($this->prepareRecoveryCodes())
+                    ->state($this->prepareRecoveryCodes())
                     ->visible($this->showRecoveryCodes),
 
             ])

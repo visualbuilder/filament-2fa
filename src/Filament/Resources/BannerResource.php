@@ -2,24 +2,29 @@
 
 namespace Visualbuilder\Filament2fa\Filament\Resources;
 
+use Filament\Actions\Action;
+use Filament\Actions\BulkAction;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Panel;
+use Filament\Schemas\Schema;
 use ReflectionClass;
 use Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages;
-use Filament\Forms\Components\Actions\Action as ComponentAction;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Fieldset;
+use Filament\Schemas\Components\Fieldset;
 use Filament\Forms\Components\RichEditor;
-use Filament\Forms\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Tabs;
-use Filament\Forms\Components\Tabs\Tab;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
-use Filament\Forms\Set;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
@@ -60,9 +65,9 @@ class BannerResource extends Resource
         return config('filament-2fa.banner.navigation.label');
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
+        return $schema
             ->schema([
                 Section::make()->schema([
                     Tabs::make('Tabs')
@@ -74,7 +79,7 @@ class BannerResource extends Resource
                                     Select::make('auth_guards')
                                         ->required()
                                         ->multiple()
-                                        ->hintAction(ComponentAction::make('help')
+                                        ->hintAction(Action::make('help')
                                             ->icon('heroicon-o-question-mark-circle')
                                             ->extraAttributes(['class' => 'text-gray-500'])
                                             ->tooltip('This banner only visible on selected Auth Panels(guards)'))
@@ -93,7 +98,7 @@ class BannerResource extends Resource
                                     Select::make('render_location')
                                         ->searchable()
                                         ->required()
-                                        ->hintAction(ComponentAction::make('help')
+                                        ->hintAction(Action::make('help')
                                             ->icon('heroicon-o-question-mark-circle')
                                             ->extraAttributes(['class' => 'text-gray-500'])
                                             ->label('')
@@ -101,7 +106,7 @@ class BannerResource extends Resource
                                         ->options(self::renderLocations()),
 
                                     Select::make('scope')
-                                        ->hintAction(ComponentAction::make('help')
+                                        ->hintAction(Action::make('help')
                                             ->icon('heroicon-o-question-mark-circle')
                                             ->label('')
                                             ->extraAttributes(['class' => 'text-gray-500'])
@@ -166,7 +171,7 @@ class BannerResource extends Resource
                                 ->schema([
                                     DateTimePicker::make('start_time')
                                         ->hintAction(
-                                            ComponentAction::make('reset')
+                                            Action::make('reset')
                                                 ->icon('heroicon-m-arrow-uturn-left')
                                                 ->action(function (Set $set) {
                                                     $set('start_time', null);
@@ -174,7 +179,7 @@ class BannerResource extends Resource
                                         ),
                                     DateTimePicker::make('end_time')
                                         ->hintAction(
-                                            ComponentAction::make('reset')
+                                            Action::make('reset')
                                                 ->icon('heroicon-m-arrow-uturn-left')
                                                 ->action(function (Set $set) {
                                                     $set('end_time', null);
@@ -201,19 +206,19 @@ class BannerResource extends Resource
             ->filters([
                 //
             ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                    Tables\Actions\BulkAction::make('disableSelected')
+            ->headerActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    BulkAction::make('disableSelected')
                         ->color('warning')
                         ->icon('heroicon-m-x-circle')
                         ->requiresConfirmation()
                         ->action(fn(Collection $records) => $records->each->update(['is_active' => false])),
-                    Tables\Actions\BulkAction::make('enableSelected')
+                    BulkAction::make('enableSelected')
                         ->color('success')
                         ->icon('heroicon-m-check-badge')
                         ->requiresConfirmation()

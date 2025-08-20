@@ -2,10 +2,10 @@
 
 namespace Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages;
 
+use Filament\Support\Enums\Width;
 use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use Filament\Support\Enums\MaxWidth;
 
 class ListBanners extends ListRecords
 {
@@ -23,7 +23,7 @@ class ListBanners extends ListRecords
     {
         return [
             'hasTopbar' => true,
-            'maxWidth' => MaxWidth::SevenExtraLarge,
+            'maxWidth' => Width::SevenExtraLarge,
         ];
     }
 

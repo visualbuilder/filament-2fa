@@ -4,8 +4,8 @@ namespace Visualbuilder\Filament2fa\Filament\Pages;
 
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Facades\Filament;
-use Filament\Pages\Auth\Login as BaseLogin;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse;
+use Filament\Auth\Pages\Login as BaseLogin;
+use Filament\Auth\Http\Responses\LoginResponse as BaseLoginResponse;
 use Filament\Models\Contracts\FilamentUser;
 use Visualbuilder\Filament2fa\TwoFactorAuthResponse;
 use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
@@ -14,7 +14,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 
 class Login extends BaseLogin
 {
-    public function authenticate(): null|TwoFactorAuthResponse|LoginResponse
+    public function authenticate(): null|BaseLoginResponse
     {
         $this->handleRateLimiting();
 
@@ -43,7 +43,7 @@ class Login extends BaseLogin
 
         session()->regenerate();
 
-        return app(LoginResponse::class);
+        return app(BaseLoginResponse::class);
     }
 
     /**

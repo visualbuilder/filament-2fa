@@ -5,3 +5,5 @@ All notable changes to `Filament-2fa` will be documented in this file.
 ## 1.0.0 - 202X-XX-XX
 
 - initial release
+
+## 4.x - 2025-08-20  Update to work with Filament 4

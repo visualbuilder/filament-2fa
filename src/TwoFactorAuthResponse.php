@@ -2,7 +2,8 @@
 
 namespace Visualbuilder\Filament2fa;
 
-use Filament\Http\Responses\Auth\LoginResponse;
+
+use Filament\Auth\Http\Responses\LoginResponse;
 use Illuminate\Http\RedirectResponse;
 use Livewire\Features\SupportRedirects\Redirector;
 

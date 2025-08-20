@@ -4,16 +4,17 @@ namespace Visualbuilder\Filament2fa\Livewire;
 
 use Exception;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Components\Group;
+
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
+use Filament\Schemas\Components\Group;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
@@ -143,13 +144,13 @@ class Confirm2Fa extends SimplePage implements HasForms
         ];
     }
 
-    protected function get2FaFormComponent(): Component
+    protected function get2FaFormComponent(): Group
     {
         return
             Group::make([
-                Placeholder::make('Hint')
+                TextEntry::make('Hint')
                     ->label('')
-                    ->content(__('filament-2fa::two-factor.confirm_otp_hint', ['otpLength' => config('two-factor.totp.digits'), 'recoveryLength' => config('two-factor.recovery.length')])),
+                    ->state(__('filament-2fa::two-factor.confirm_otp_hint', ['otpLength' => config('two-factor.totp.digits'), 'recoveryLength' => config('two-factor.recovery.length')])),
                 TextInput::make('totp_code')
                     ->label(__('filament-2fa::two-factor.totp_or_recovery_code'))
                     ->autofocus()

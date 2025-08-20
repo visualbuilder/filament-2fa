@@ -3,7 +3,7 @@
 namespace Visualbuilder\Filament2fa\Helpers;
 
 use Filament\Notifications\Notification;
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
 

@@ -2,10 +2,10 @@
 
 namespace Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages;
 
+use Filament\Support\Enums\Width;
 use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
-use Filament\Support\Enums\MaxWidth;
 
 class EditBanner extends EditRecord
 {
@@ -18,16 +18,16 @@ class EditBanner extends EditRecord
         ];
     }
 
-    public function getMaxContentWidth(): MaxWidth | string | null
+    public function getMaxContentWidth(): Width | string | null
     {
-        return MaxWidth::ScreenExtraLarge;
+        return Width::ScreenExtraLarge;
     }
 
     protected function getLayoutData(): array
     {
         return [
             'hasTopbar' => true,
-            'maxWidth' => MaxWidth::SixExtraLarge,
+            'maxWidth' => Width::SixExtraLarge,
         ];
     }
 
