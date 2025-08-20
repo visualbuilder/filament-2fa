@@ -112,7 +112,7 @@ class Configure extends EditProfile
 
     public function getView(): string
     {
-        return static::$view ?? 'filament-panels::pages.auth.edit-profile';
+        return $this->view ?? 'filament-panels::auth.pages.edit-profile';
     }
 
     public function hasLogo(): bool
