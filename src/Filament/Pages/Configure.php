@@ -100,7 +100,7 @@ class Configure extends EditProfile
         return self::$slug;
     }
 
-    public function getSubNavigationPosition(): SubNavigationPosition
+    public static function getSubNavigationPosition(): SubNavigationPosition
     {
         return config('filament-2fa.navigation.subnav_position');
     }
