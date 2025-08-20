@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
 use Visualbuilder\Filament2fa\FilamentTwoFactor;
 
-class Confirm2Fa extends SimplePage implements HasForms
+class Confirm2Fa extends SimplePage
 {
     use InteractsWithForms, InteractsWithFormActions;
 

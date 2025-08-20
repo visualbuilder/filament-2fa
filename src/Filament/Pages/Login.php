@@ -3,128 +3,138 @@
 namespace Visualbuilder\Filament2fa\Filament\Pages;
 
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
-use Filament\Facades\Filament;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse as ContractsLoginResponse;
 use Filament\Auth\Pages\Login as BaseLogin;
-use Filament\Auth\Http\Responses\LoginResponse as BaseLoginResponse;
+use Filament\Facades\Filament;
 use Filament\Models\Contracts\FilamentUser;
-use Visualbuilder\Filament2fa\TwoFactorAuthResponse;
-use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
-use Illuminate\Support\Facades\Crypt;
+use Filament\Notifications\Notification;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Contracts\Auth\Guard;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Validation\ValidationException;
+use SensitiveParameter;
+use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
+use Visualbuilder\Filament2fa\TwoFactorAuthResponse;
 
 class Login extends BaseLogin
 {
-    public function authenticate(): null|BaseLoginResponse
+    public function authenticate(): ?ContractsLoginResponse
     {
-        $this->handleRateLimiting();
-
-        $data = $this->form->getState();
-        $credentials = $this->getCredentialsFromFormData($data);
-        $remember = $data['remember'] ?? false;
-
-        if (! $this->attemptLogin($credentials, $remember)) {
-            $this->throwFailureValidationException();
-        }
-
-        $user = Filament::auth()->user();
-
-        if ($this->needsTwoFactorAuthentication($user)) {
-            $this->storeCredentials($credentials, $remember);
-            Filament::auth()->logout();
-            // Regenerate session to prevent fixation
-            session()->regenerate();
-            return app(TwoFactorAuthResponse::class);
-        }
-
-        if (! $this->userCanAccessPanel($user)) {
-            Filament::auth()->logout();
-            $this->throwFailureValidationException();
-        }
-
-        session()->regenerate();
-
-        return app(BaseLoginResponse::class);
-    }
-
-    /**
-     * Handle rate limiting for login attempts.
-     */
-    protected function handleRateLimiting(): void
-    {
+        // --- Rate limiting (same semantics as core) ---
         try {
             $this->rateLimit(5);
         } catch (TooManyRequestsException $exception) {
             $this->getRateLimitedNotification($exception)?->send();
-            // Use the available property to get the number of seconds
-            $this->addError('email', __('auth.throttle', ['seconds' => $exception->secondsUntilAvailable]));
-            // Stop further execution by returning early
-            return;
+            // match V4’s validation path
+            $this->addError('data.email', __('auth.throttle', [
+                'seconds' => $exception->secondsUntilAvailable,
+                'minutes' => $exception->minutesUntilAvailable,
+            ]));
+            return null;
         }
-    }
 
-    /**
-     * Attempt to authenticate the user.
-     */
-    protected function attemptLogin(array $credentials, bool $remember): bool
-    {
-        return Filament::auth()->attempt($credentials, $remember);
-    }
+        $data = $this->form->getState();
 
-    /**
-     * Handle two-factor authentication if required.
-     */
-    protected function handleTwoFactorAuthentication(Authenticatable $user, array $credentials, bool $remember): ?TwoFactorAuthResponse
-    {
+        /** @var SessionGuard $auth */
+        $auth = Filament::auth();
+        $credentials = $this->getCredentialsFromFormData($data);
+
+        // Manual “pre-lookup” like core does, so we can raise Failed event consistently
+        $provider = $auth->getProvider(); /** @phpstan-ignore-line */
+        $candidate = $provider->retrieveByCredentials($credentials);
+
+        if ((! $candidate) || (! $provider->validateCredentials($candidate, $credentials))) {
+            $this->fireFailedEvent($auth, $candidate, $credentials);
+            $this->throwFailureValidationException();
+        }
+
+        // Authenticate (we’ll still do post-checks and potentially log out)
+        if (! $auth->attempt($credentials, $data['remember'] ?? false)) {
+            $this->fireFailedEvent($auth, $candidate, $credentials);
+            $this->throwFailureValidationException();
+        }
+
+        /** @var Authenticatable $user */
+        $user = $auth->user();
+
+        // Panel access parity with core
+        if ($user instanceof FilamentUser) {
+            if (! $user->canAccessPanel(Filament::getCurrentOrDefaultPanel())) {
+                $auth->logout();
+                $this->throwFailureValidationException();
+            }
+        }
+
+        // ---- Your package’s 2FA decision point ----
         if ($this->needsTwoFactorAuthentication($user)) {
-            $this->storeCredentials($credentials, $remember);
-            Filament::auth()->logout();
-
+            $this->storeCredentials($credentials, (bool) ($data['remember'] ?? false));
+            $auth->logout();
+            session()->regenerate(); // prevent fixation
             return app(TwoFactorAuthResponse::class);
         }
 
-        return null;
+        session()->regenerate();
+        return app(ContractsLoginResponse::class);
     }
 
     /**
-     * Determine if two-factor authentication is required.
+     * Decide whether to require your package’s 2FA.
      */
     protected function needsTwoFactorAuthentication(Authenticatable $user): bool
     {
-        $authGuard = Filament::getAuthGuard();
+        $guard = Filament::getAuthGuard();
+
         return $user instanceof TwoFactorAuthenticatable
-            && array_key_exists($authGuard, config('filament-2fa.auth_guards'))
-            && config("filament-2fa.auth_guards.$authGuard.enabled")
+            && array_key_exists($guard, config('filament-2fa.auth_guards', []))
+            && (bool) config("filament-2fa.auth_guards.$guard.enabled")
             && $user->hasTwoFactorEnabled()
             && ! $user->isSafeDevice(request());
     }
 
     /**
-     * Check if the authenticated user can access the current panel.
-     */
-    protected function userCanAccessPanel(Authenticatable $user): bool
-    {
-        return ! ($user instanceof FilamentUser && ! $user->canAccessPanel(Filament::getCurrentPanel()));
-    }
-
-    /**
-     * Save credentials to session encrypted.
-     * Flash not possible with Filament as Livewire call would clear them before they can be used
+     * Save credentials (encrypted) for the follow-up 2FA challenge.
+     * We also remember the panel id so the response can route correctly.
      */
     protected function storeCredentials(array $credentials, bool $remember): void
     {
-        $encryptedCredentials = array_map(
-            fn($value) => Crypt::encryptString($value),
+        $encrypted = array_map(
+            static fn ($v) => Crypt::encryptString((string) $v),
             $credentials
         );
 
-        $sessionData = [
-            'credentials' => $encryptedCredentials,
-            'remember' => $remember,
-            'panel_id' => Filament::getCurrentPanel()->getId(),
+        $payload = [
+            'credentials' => $encrypted,
+            'remember'    => $remember,
+            'panel_id'    => Filament::getCurrentOrDefaultPanel()->getId(),
         ];
 
-        $credentialKey = config('filament-2fa.login.credential_key');
+        $key = config('filament-2fa.login.credential_key', 'vb_2fa_login');
+        session([$key => $payload]);
+    }
 
-        session([$credentialKey => $sessionData]);
+    /**
+     * Emit the same Failed event shape core uses.
+     * @param array<string,mixed> $credentials
+     */
+    protected function fireFailedEvent(Guard $guard, ?Authenticatable $user, #[SensitiveParameter] array $credentials): void
+    {
+        event(app(\Illuminate\Auth\Events\Failed::class, [
+            'guard' => property_exists($guard, 'name') ? $guard->name : '',
+            'user' => $user,
+            'credentials' => $credentials,
+        ]));
+    }
+
+    /**
+     * Match core’s validation errors path for consistency.
+     */
+    protected function throwFailureValidationException(): never
+    {
+        throw ValidationException::withMessages([
+            'data.email' => __('filament-panels::auth/pages/login.messages.failed'),
+        ]);
     }
 }
