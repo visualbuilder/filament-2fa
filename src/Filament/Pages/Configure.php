@@ -102,10 +102,29 @@ class Configure extends SimplePage
             $record = $user->createTwoFactorAuth(); // create once
         }
 
+        // Some versions of the underlying library expect a "label" attribute
+        // on the TwoFactorAuth model to derive the issuer. When the label is
+        // missing calling `toQr()` or `toUri()` would throw an exception.
+        // Ensure the label is always present by defaulting to the application
+        // name and the user's email (or their identifier if email is missing).
+        $email = $user->email ?? $user->getAuthIdentifier();
+        if (! $record->label) {
+            $record->label = config('app.name') . ':' . $email;
+        }
+
+        // Generating the secret populates the `shared_secret` attribute which
+        // is required when persisting the model. Without this the insert would
+        // fail because the column doesn't allow NULL values.
+        $secret = $record->toString();
+
+        if (! $record->exists || $record->isDirty('label')) {
+            $record->save();
+        }
+
         $this->provisioning = [
             'qr'     => $record->toQr(),
             'uri'    => $record->toUri(),
-            'secret' => $record->toString(),
+            'secret' => $secret,
         ];
 
         // If you still want form state:
