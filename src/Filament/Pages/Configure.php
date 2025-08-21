@@ -8,6 +8,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Pages\Concerns\HasRoutes;
 use Filament\Pages\SimplePage;
+use Filament\Panel\Concerns\HasNavigation;
 use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Actions as ActionsBar;
 use Filament\Schemas\Components\EmbeddedSchema;
@@ -31,13 +32,53 @@ use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
 class Configure extends SimplePage
 {
     use HasRoutes;
+    use HasNavigation;
 
     protected Width | string | null $maxContentWidth = Width::FourExtraLarge;
 
-    // Avoid the $slug property clash with HasRoutes — override the getter:
     public static function getSlug(): string
     {
         return 'two-factor-authentication';
+    }
+
+    public static function registerNavigationItems(): void
+    {
+        if (! static::shouldRegisterNavigation()) {
+            return;
+        }
+
+        Filament::getCurrentPanel()
+            ->navigationItems(static::getNavigationItems());
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return (bool) config('filament-2fa.navigation.visible_on_navbar', false);
+    }
+    
+    public static function getNavigationLabel(): string
+    {
+        return (string) (config('filament-2fa.navigation.label') ?? 'Two-Factor Authentication');
+    }
+
+    public static function getNavigationIcon(): ?string
+    {
+        return (string) (config('filament-2fa.navigation.icon') ?? 'heroicon-o-shield-check');
+    }
+
+    public static function getNavigationGroup(): ?string
+    {
+        return config('filament-2fa.navigation.group');
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return config('filament-2fa.navigation.sort_no');
+    }
+
+    public static function getCluster(): ?string
+    {
+        return config('filament-2fa.navigation.cluster');
     }
 
     public ?array $data = [];            // form state lives here (e.g. data.two_factor_code)
@@ -46,19 +87,35 @@ class Configure extends SimplePage
     #[Locked]
     public array $recoveryCodes = [];
 
+    #[Locked]            // prevents client-side mutation and survives re-renders
+    public ?array $provisioning = null;
+
     public function mount(): void
     {
         $user = $this->getUser();
-        if (! $user instanceof TwoFactorAuthenticatable) {
-            throw new Exception('Authenticated user must implement TwoFactorAuthenticatable.');
+
+        // If there is ALREADY a pending two-factor record, reuse it.
+        // Only create if none exists yet. Do NOT gate this by "enabled".
+        $record = $user->twoFactorAuth ?? $user->getTwoFactorAuth();
+
+        if (! $record) {
+            $record = $user->createTwoFactorAuth(); // create once
         }
 
-        if ($user->hasTwoFactorEnabled()) {
-            $this->recoveryCodes = $user->getRecoveryCodes();
-        }
+        $this->provisioning = [
+            'qr'     => $record->toQr(),
+            'uri'    => $record->toUri(),
+            'secret' => $record->toString(),
+        ];
 
-        // Works once we define defaultForm()/form() and include the Form in content()
+        // If you still want form state:
         $this->form->fill();
+    }
+
+    // If your view calls this, keep it idempotent:
+    public function prepareTwoFactor(): array
+    {
+        return $this->provisioning ?? [];
     }
 
     public function getTitle(): string|Htmlable
@@ -160,7 +217,7 @@ class Configure extends SimplePage
                             ->action(function () {
                                 $this->showRecoveryCodes = ! $this->showRecoveryCodes;
                                 if ($this->showRecoveryCodes && empty($this->recoveryCodes)) {
-                                    $this->recoveryCodes = $this->getUser()->getRecoveryCodes();
+                                    $this->recoveryCodes = $this->getUser()->getRecoveryCodes()->values()->all();
                                 }
                             }),
 
@@ -170,7 +227,7 @@ class Configure extends SimplePage
                             ->label(__('Generate new recovery codes'))
                             ->requiresConfirmation()
                             ->action(function () {
-                                $this->recoveryCodes = $this->getUser()->generateRecoveryCodes();
+                                $this->recoveryCodes = $this->getUser()->generateRecoveryCodes()->values()->all();
                             }),
 
                         Action::make('forgetDevices')
@@ -181,7 +238,7 @@ class Configure extends SimplePage
                             ->action(function () {
                                 $this->getUser()->forgetSafeDevices();
                                 $this->dispatch('refresh');
-                            }),
+                            })->visible((bool) ($this->getUser()->twoFactorAuth?->safe_devices)),
 
                         Action::make('disable2fa')
                             ->label(__('Disable 2FA'))
@@ -199,7 +256,7 @@ class Configure extends SimplePage
 
                     Section::make()
                         ->schema([
-                            Text::make(new HtmlString('<p>'.__('Store these codes somewhere safe.').'</p>')),
+                            Text::make(new HtmlString('<p>'.__('Store these codes somewhere safe, you can login once with each one if you don\'t have access to your phone').'</p>')),
                             UnorderedList::make(fn() => collect($this->recoveryCodes)->pluck('code')
                                 ->map(fn($c) => Text::make($c)->fontFamily(\Filament\Support\Enums\FontFamily::Mono))
                                 ->all()),
@@ -250,17 +307,4 @@ class Configure extends SimplePage
         return $user;
     }
 
-    /** For the QR partial. */
-    public function prepareTwoFactor(): array
-    {
-        $secret = $this->getUser()->hasTwoFactorEnabled()
-            ? $this->getUser()->getTwoFactorAuth()
-            : $this->getUser()->createTwoFactorAuth();
-
-        return [
-            'qr'     => $secret->toQr(),
-            'uri'    => $secret->toUri(),
-            'secret' => $secret->toString(),
-        ];
-    }
 }
