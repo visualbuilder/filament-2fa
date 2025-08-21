@@ -27,9 +27,11 @@ class Confirm2Fa extends SimplePage
 
     protected string $view = 'filament-2fa::livewire.confirm2-fa';
 
-    public bool $safe_device_enable = true;
+    public bool $safe_device_enable = false;
 
     public string $totp_code;
+    
+    public bool $isSubmitting = false;
 
     public static function getSort(): int
     {
@@ -75,6 +77,7 @@ class Confirm2Fa extends SimplePage
 
     public function submit(): void
     {
+        $this->isSubmitting = true;
 
         // Trigger form validation and ensure fields are present.
         $this->form->validate();
@@ -84,16 +87,8 @@ class Confirm2Fa extends SimplePage
 
         if (! $user) {
             $this->redirect(Filament::getUrl());
-
             return;
         }
-
-        // Debug: Log the OTP code being submitted
-        \Log::info('2FA Debug - Submitting OTP', [
-            'totp_code' => $this->form->getState()['totp_code'] ?? 'not set',
-            'user_id' => $user->id,
-            'user_has_2fa' => $user->hasTwoFactorEnabled(),
-        ]);
 
         // Create the TwoFactor validator with the correct request data
         request()->merge([
@@ -106,10 +101,6 @@ class Confirm2Fa extends SimplePage
             'input' => 'totp_code',
             'safeDeviceInput' => 'safe_device_enable',
         ])->validate($user);
-
-        \Log::info('2FA Debug - Validation result', [
-            'valid' => $twoFactorValid,
-        ]);
 
         if ($twoFactorValid) {
             $sessionKey = config('filament-2fa.login.credential_key', '_2fa_login');
@@ -130,9 +121,14 @@ class Confirm2Fa extends SimplePage
             return;
         }
 
-        Filament::auth()->logout();
-        session()->regenerate();
-        $this->throwTotpcodeValidationException();
+        Notification::make()
+            ->title('Invalid Code')
+            ->body(__('filament-2fa::two-factor.fail_2fa'))
+            ->icon('heroicon-o-x-circle')
+            ->color('danger')
+            ->send();
+        
+        $this->isSubmitting = false;
     }
 
     public function authenticate(): null|bool|Model
@@ -186,12 +182,13 @@ class Confirm2Fa extends SimplePage
                     ->extraInputAttributes(['class'=>'text-center','style'=>'font-size:2.6em; letter-spacing:1rem'])
                     ->live()
                     ->afterStateUpdated(function ($state) {
-                        \Log::info('2FA Debug - afterStateUpdated', [
-                            'state' => $state,
-                            'length' => strlen($state ?? ''),
-                            'required_length' => config('two-factor.totp.digits'),
-                        ]);
-                        if (strlen($state) === config('two-factor.totp.digits')) {
+                        $length = strlen($state);
+                        // Auto-submit for numeric TOTP codes (typically 6 digits)
+                        if ($length === config('two-factor.totp.digits') && ctype_digit($state)) {
+                            $this->submit();
+                        }
+                        // Auto-submit for 8-character recovery codes (contain letters)
+                        elseif ($length === 8 && preg_match('/[a-zA-Z]/', $state)) {
                             $this->submit();
                         }
                     }),
