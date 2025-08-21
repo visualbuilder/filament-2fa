@@ -102,6 +102,17 @@ class Configure extends SimplePage
             $record = $user->createTwoFactorAuth(); // create once
         }
 
+        // Some versions of the underlying library expect a "label" attribute
+        // on the TwoFactorAuth model to derive the issuer. When the label is
+        // missing calling `toQr()` or `toUri()` would throw an exception.
+        // Ensure the label is always present by defaulting to the application
+        // name and the user's email (or their identifier if email is missing).
+        if (! $record->label) {
+            $email = $user->email ?? $user->getAuthIdentifier();
+            $record->label = config('app.name') . ':' . $email;
+            $record->save();
+        }
+
         $this->provisioning = [
             'qr'     => $record->toQr(),
             'uri'    => $record->toUri(),
