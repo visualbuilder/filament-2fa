@@ -6,5 +6,5 @@ use Laragear\TwoFactor\TwoFactor;
 
 class FilamentTwoFactor extends TwoFactor
 {
-    // Intentionally extend base TwoFactor without modifications.
+
 }
