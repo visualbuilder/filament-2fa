@@ -76,8 +76,10 @@ class Confirm2Fa extends SimplePage
 
     public function submit(): void
     {
+
         // Trigger form validation and ensure fields are present.
         $this->form->validate();
+
 
         $user = $this->authenticate();
 
