@@ -113,12 +113,16 @@ class Configure extends SimplePage
             $record->label = config('app.name') . ':' . $email;
         }
 
-        // Generating the secret populates the `shared_secret` attribute which
-        // is required when persisting the model. Without this the insert would
-        // fail because the column doesn't allow NULL values.
+        // Ensure a secret exists before attempting to serialize it.
+        // Some installations don't generate the shared secret until it is
+        // explicitly requested, which would make `toString()` return null.
+        if (! $record->shared_secret) {
+            $record->shared_secret = static::generateBase32Secret();
+        }
+
         $secret = $record->toString();
 
-        if (! $record->exists || $record->isDirty('label')) {
+        if (! $record->exists || $record->isDirty('label') || $record->isDirty('shared_secret')) {
             $record->save();
         }
 
@@ -136,6 +140,16 @@ class Configure extends SimplePage
     public function prepareTwoFactor(): array
     {
         return $this->provisioning ?? [];
+    }
+
+    protected static function generateBase32Secret(int $length = 32): string
+    {
+        $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        $secret = '';
+        for ($i = 0; $i < $length; $i++) {
+            $secret .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+        return $secret;
     }
 
     public function getTitle(): string|Htmlable
