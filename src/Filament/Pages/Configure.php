@@ -107,6 +107,7 @@ class Configure extends SimplePage
         // missing calling `toQr()` or `toUri()` would throw an exception.
         // Ensure the label is always present by defaulting to the application
         // name and the user's email (or their identifier if email is missing).
+
         $email = $user->email ?? $user->getAuthIdentifier();
         if (! $record->label) {
             $record->label = config('app.name') . ':' . $email;
