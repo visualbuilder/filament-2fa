@@ -76,41 +76,19 @@ class Confirm2Fa extends SimplePage
 
     public function submit(): void
     {
-        // Trigger form validation and retrieve state.
-        $this->form->getState();
+        // Trigger form validation and ensure fields are present.
+        $this->form->validate();
 
         $user = $this->authenticate();
 
         if (! $user) {
             $this->redirect(Filament::getUrl());
-        } else {
-            if (app(FilamentTwoFactor::class,
-                [
-                    'input'           => $formData['totp_code'],
-                    'safeDeviceInput' => isset($formData['safe_device_enable']) ? $formData['safe_device_enable'] : false
-                ])->validate2Fa($user)) {
-                $sessionKey = config('filament-2fa.login.credential_key', '_2fa_login');
 
-                Notification::make()
-                    ->title('Success')
-                    ->body(__('filament-2fa::two-factor.success'))
-                    ->icon('heroicon-o-check-circle')
-                    ->color('success')
-                    ->send();
-
-                session()->forget("{$sessionKey}.credentials");
-                session()->forget("{$sessionKey}.remember");
-                session()->forget("{$sessionKey}.panel_id");
-
-                $this->redirectIntended(Filament::getUrl());
-            } else {
-                Filament::auth()->logout();
-                session()->regenerate();
-                $this->throwTotpcodeValidationException();
-            }
+            return;
         }
 
         $twoFactorValid = app(FilamentTwoFactor::class, [
+            // Use input field names so the TwoFactor service pulls values from the request.
             'input' => 'totp_code',
             'safeDeviceInput' => 'safe_device_enable',
         ])->validate($user);
