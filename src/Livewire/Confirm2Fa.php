@@ -5,12 +5,11 @@ namespace Visualbuilder\Filament2fa\Livewire;
 use Exception;
 use Filament\Facades\Filament;
 
-use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\ViewField;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
@@ -89,11 +88,28 @@ class Confirm2Fa extends SimplePage
             return;
         }
 
+        // Debug: Log the OTP code being submitted
+        \Log::info('2FA Debug - Submitting OTP', [
+            'totp_code' => $this->form->getState()['totp_code'] ?? 'not set',
+            'user_id' => $user->id,
+            'user_has_2fa' => $user->hasTwoFactorEnabled(),
+        ]);
+
+        // Create the TwoFactor validator with the correct request data
+        request()->merge([
+            'totp_code' => $this->form->getState()['totp_code'] ?? '',
+            'safe_device_enable' => $this->form->getState()['safe_device_enable'] ?? false,
+        ]);
+
         $twoFactorValid = app(FilamentTwoFactor::class, [
             // Use input field names so the TwoFactor service pulls values from the request.
             'input' => 'totp_code',
             'safeDeviceInput' => 'safe_device_enable',
         ])->validate($user);
+
+        \Log::info('2FA Debug - Validation result', [
+            'valid' => $twoFactorValid,
+        ]);
 
         if ($twoFactorValid) {
             $sessionKey = config('filament-2fa.login.credential_key', '_2fa_login');
@@ -157,9 +173,9 @@ class Confirm2Fa extends SimplePage
     {
         return
             Group::make([
-                TextEntry::make('Hint')
+                ViewField::make('hint')
                     ->label('')
-                    ->state(__('filament-2fa::two-factor.confirm_otp_hint', ['otpLength' => config('two-factor.totp.digits'), 'recoveryLength' => config('two-factor.recovery.length')])),
+                    ->view('filament-2fa::forms.components.hint'),
                 TextInput::make('totp_code')
                     ->label(__('filament-2fa::two-factor.totp_or_recovery_code'))
                     ->autofocus()
@@ -170,6 +186,11 @@ class Confirm2Fa extends SimplePage
                     ->extraInputAttributes(['class'=>'text-center','style'=>'font-size:2.6em; letter-spacing:1rem'])
                     ->live()
                     ->afterStateUpdated(function ($state) {
+                        \Log::info('2FA Debug - afterStateUpdated', [
+                            'state' => $state,
+                            'length' => strlen($state ?? ''),
+                            'required_length' => config('two-factor.totp.digits'),
+                        ]);
                         if (strlen($state) === config('two-factor.totp.digits')) {
                             $this->submit();
                         }
@@ -183,7 +204,7 @@ class Confirm2Fa extends SimplePage
                     ->offColor('danger')
                     ->onIcon('heroicon-m-check-circle')
                     ->offIcon('heroicon-m-x-mark')
-                    ->default(true)
+                    ->default(false)
                     ->visible(config('two-factor.safe_devices.enabled'))
             ]);
     }
