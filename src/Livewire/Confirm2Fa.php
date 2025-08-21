@@ -76,11 +76,12 @@ class Confirm2Fa extends SimplePage
 
     public function submit(): void
     {
-        $formData = $this->form->getState();
+        // Trigger form validation and retrieve state.
+        $this->form->getState();
 
         $user = $this->authenticate();
 
-        if (!$user) {
+        if (! $user) {
             $this->redirect(Filament::getUrl());
         } else {
             if (app(FilamentTwoFactor::class,
@@ -108,6 +109,34 @@ class Confirm2Fa extends SimplePage
                 $this->throwTotpcodeValidationException();
             }
         }
+
+        $twoFactorValid = app(FilamentTwoFactor::class, [
+            'input' => 'totp_code',
+            'safeDeviceInput' => 'safe_device_enable',
+        ])->validate($user);
+
+        if ($twoFactorValid) {
+            $sessionKey = config('filament-2fa.login.credential_key', '_2fa_login');
+
+            Notification::make()
+                ->title('Success')
+                ->body(__('filament-2fa::two-factor.success'))
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
+                ->send();
+
+            session()->forget("{$sessionKey}.credentials");
+            session()->forget("{$sessionKey}.remember");
+            session()->forget("{$sessionKey}.panel_id");
+
+            $this->redirectIntended(Filament::getUrl());
+
+            return;
+        }
+
+        Filament::auth()->logout();
+        session()->regenerate();
+        $this->throwTotpcodeValidationException();
     }
 
     public function authenticate(): null|bool|Model
