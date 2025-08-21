@@ -107,16 +107,25 @@ class Configure extends SimplePage
         // missing calling `toQr()` or `toUri()` would throw an exception.
         // Ensure the label is always present by defaulting to the application
         // name and the user's email (or their identifier if email is missing).
+
+        $email = $user->email ?? $user->getAuthIdentifier();
         if (! $record->label) {
-            $email = $user->email ?? $user->getAuthIdentifier();
             $record->label = config('app.name') . ':' . $email;
+        }
+
+        // Generating the secret populates the `shared_secret` attribute which
+        // is required when persisting the model. Without this the insert would
+        // fail because the column doesn't allow NULL values.
+        $secret = $record->toString();
+
+        if (! $record->exists || $record->isDirty('label')) {
             $record->save();
         }
 
         $this->provisioning = [
             'qr'     => $record->toQr(),
             'uri'    => $record->toUri(),
-            'secret' => $record->toString(),
+            'secret' => $secret,
         ];
 
         // If you still want form state:
