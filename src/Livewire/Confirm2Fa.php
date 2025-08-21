@@ -85,7 +85,7 @@ class Confirm2Fa extends SimplePage
         } else {
             if (app(FilamentTwoFactor::class,
                 [
-                    'code'            => $formData['totp_code'],
+                    'input'           => $formData['totp_code'],
                     'safeDeviceInput' => isset($formData['safe_device_enable']) ? $formData['safe_device_enable'] : false
                 ])->validate2Fa($user)) {
                 $sessionKey = config('filament-2fa.login.credential_key', '_2fa_login');
