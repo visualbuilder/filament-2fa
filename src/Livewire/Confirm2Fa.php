@@ -76,8 +76,10 @@ class Confirm2Fa extends SimplePage
 
     public function submit(): void
     {
-        // Trigger form validation and retrieve state.
-        $formData = $this->form->getState();
+
+        // Trigger form validation and ensure fields are present.
+        $this->form->validate();
+
 
         $user = $this->authenticate();
 
@@ -88,8 +90,9 @@ class Confirm2Fa extends SimplePage
         }
 
         $twoFactorValid = app(FilamentTwoFactor::class, [
-            'input' => $formData['totp_code'] ?? null,
-            'safeDeviceInput' => $formData['safe_device_enable'] ?? false,
+            // Use input field names so the TwoFactor service pulls values from the request.
+            'input' => 'totp_code',
+            'safeDeviceInput' => 'safe_device_enable',
         ])->validate($user);
 
         if ($twoFactorValid) {
