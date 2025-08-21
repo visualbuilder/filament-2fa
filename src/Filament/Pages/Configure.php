@@ -102,10 +102,33 @@ class Configure extends SimplePage
             $record = $user->createTwoFactorAuth(); // create once
         }
 
+        // Some versions of the underlying library expect a "label" attribute
+        // on the TwoFactorAuth model to derive the issuer. When the label is
+        // missing calling `toQr()` or `toUri()` would throw an exception.
+        // Ensure the label is always present by defaulting to the application
+        // name and the user's email (or their identifier if email is missing).
+        $email = $user->email ?? $user->getAuthIdentifier();
+        if (! $record->label) {
+            $record->label = config('app.name') . ':' . $email;
+        }
+
+        // Ensure a secret exists before attempting to serialize it.
+        // Some installations don't generate the shared secret until it is
+        // explicitly requested, which would make `toString()` return null.
+        if (! $record->shared_secret) {
+            $record->shared_secret = static::generateBase32Secret();
+        }
+
+        $secret = $record->toString();
+
+        if (! $record->exists || $record->isDirty('label') || $record->isDirty('shared_secret')) {
+            $record->save();
+        }
+
         $this->provisioning = [
             'qr'     => $record->toQr(),
             'uri'    => $record->toUri(),
-            'secret' => $record->toString(),
+            'secret' => $secret,
         ];
 
         // If you still want form state:
@@ -116,6 +139,16 @@ class Configure extends SimplePage
     public function prepareTwoFactor(): array
     {
         return $this->provisioning ?? [];
+    }
+
+    protected static function generateBase32Secret(int $length = 32): string
+    {
+        $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+        $secret = '';
+        for ($i = 0; $i < $length; $i++) {
+            $secret .= $alphabet[random_int(0, strlen($alphabet) - 1)];
+        }
+        return $secret;
     }
 
     public function getTitle(): string|Htmlable
