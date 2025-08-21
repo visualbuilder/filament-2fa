@@ -46,7 +46,7 @@ class FilamentTwoFactor extends TwoFactor
      */
     protected function requestHasCode(): bool
     {
-        return ! validator(['totp_code' => $this->code], ['totp_code' => 'required|alpha_num'])->fails();
+        return ! validator(['totp_code' => $this->input], ['totp_code' => 'required|alpha_num'])->fails();
     }
 
     /**
@@ -54,7 +54,7 @@ class FilamentTwoFactor extends TwoFactor
      */
     protected function getCode(): string
     {
-        return $this->code;
+        return $this->input;
     }
 
     /**
