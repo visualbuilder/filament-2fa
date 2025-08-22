@@ -4,7 +4,10 @@
             isSubmittingLocal: false,
             totpDigits: {{ (int) config('two-factor.totp.digits', 6) }},
             recoveryLen: {{ (int) config('two-factor.recovery.length', 8) }},
-            init() { Livewire.hook('message.processed', () => { this.isSubmittingLocal = false }) },
+            init() {
+                // Fallback: if Livewire finishes, hide spinner
+                Livewire.hook('message.processed', () => { this.isSubmittingLocal = false })
+            },
             handleOtpInput(v) {
                 if (!v) return;
                 const len = v.length;
@@ -16,11 +19,11 @@
                 $wire.set('data.totp_code', v).then(() => $wire.submit());
             }
         }"
+        x-on:twofa-finished.window="isSubmittingLocal = false"
     >
         <form wire:submit.prevent="submit" class="space-y-4">
             {{ $this->form }}
 
-            {{-- Reserve height, but only SHOW the spinner when verifying --}}
             <div class="mt-6 h-6 relative">
                 <div
                     x-cloak

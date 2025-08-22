@@ -84,7 +84,6 @@ class Confirm2Fa extends SimplePage
 
     public function submit(): void
     {
-        // Prevent concurrent submissions; schedule a rerun if called again.
         if ($this->isSubmitting) {
             $this->shouldResubmit = true;
             return;
@@ -93,7 +92,6 @@ class Confirm2Fa extends SimplePage
         $this->isSubmitting = true;
 
         try {
-            // Trigger form validation and ensure fields are present.
             $this->form->validate();
 
             $user = $this->authenticate();
@@ -103,19 +101,16 @@ class Confirm2Fa extends SimplePage
                 return;
             }
 
-            // Grab latest state and snapshot the code we’re verifying.
             $state = $this->form->getState();
             $code = (string) ($state['totp_code'] ?? '');
             $this->processingCode = $code;
 
-            // Create the TwoFactor validator with the correct request data
             request()->merge([
                 'totp_code' => $code,
                 'safe_device_enable' => (bool) ($state['safe_device_enable'] ?? false),
             ]);
 
-            $twoFactorValid = app(FilamentTwoFactor::class, [
-                // Use input field names so the TwoFactor service pulls values from the request.
+            $twoFactorValid = app(\Visualbuilder\Filament2fa\FilamentTwoFactor::class, [
                 'input' => 'totp_code',
                 'safeDeviceInput' => 'safe_device_enable',
             ])->validate($user);
@@ -123,7 +118,7 @@ class Confirm2Fa extends SimplePage
             if ($twoFactorValid) {
                 $sessionKey = config('filament-2fa.login.credential_key', '_2fa_login');
 
-                Notification::make()
+                \Filament\Notifications\Notification::make()
                     ->title('Success')
                     ->body(__('filament-2fa::two-factor.success'))
                     ->icon('heroicon-o-check-circle')
@@ -134,11 +129,11 @@ class Confirm2Fa extends SimplePage
                 session()->forget("{$sessionKey}.remember");
                 session()->forget("{$sessionKey}.panel_id");
 
-                $this->redirectIntended(Filament::getUrl());
+                $this->redirectIntended(\Filament\Facades\Filament::getUrl());
                 return;
             }
 
-            Notification::make()
+            \Filament\Notifications\Notification::make()
                 ->title('Invalid Code')
                 ->body(__('filament-2fa::two-factor.fail_2fa'))
                 ->icon('heroicon-o-x-circle')
@@ -148,27 +143,30 @@ class Confirm2Fa extends SimplePage
         } finally {
             $this->isSubmitting = false;
 
-            // If the user edited the code while we were verifying, and it is now "complete",
-            // re-run verification immediately with the latest value.
+            // If user changed the code during verify, re-run; otherwise emit "finished"
             if ($this->shouldResubmit) {
                 $this->shouldResubmit = false;
 
                 $latest = (string) ($this->form->getState()['totp_code'] ?? '');
                 if ($latest !== ($this->processingCode ?? '')) {
-                    $totpDigits   = (int) config('two-factor.totp.digits', 6);
-                    $recoveryLen  = (int) config('two-factor.recovery.length', 8);
-                    $len          = strlen($latest);
-
-                    $isTotp      = $len === $totpDigits && ctype_digit($latest);
-                    $isRecovery  = $len === $recoveryLen && preg_match('/[a-zA-Z]/', $latest);
+                    $totpDigits  = (int) config('two-factor.totp.digits', 6);
+                    $recoveryLen = (int) config('two-factor.recovery.length', 8);
+                    $len = strlen($latest);
+                    $isTotp = $len === $totpDigits && ctype_digit($latest);
+                    $isRecovery = $len === $recoveryLen && preg_match('/[a-zA-Z]/', $latest);
 
                     if ($isTotp || $isRecovery) {
                         $this->submit();
+                        return; // keep spinner on; next cycle will emit its own finished
                     }
                 }
             }
+
+            // Tell the front-end to hide the spinner
+            $this->dispatch('twofa-finished');
         }
     }
+
 
     public function authenticate(): null|bool|Model
     {
