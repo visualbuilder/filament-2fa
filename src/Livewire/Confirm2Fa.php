@@ -1,5 +1,4 @@
 <?php
-
 namespace Visualbuilder\Filament2fa\Livewire;
 
 use Exception;
@@ -27,11 +26,19 @@ class Confirm2Fa extends SimplePage
 
     protected string $view = 'filament-2fa::livewire.confirm2-fa';
 
+    public ?array $data = [];
+
     public bool $safe_device_enable = false;
 
     public string $totp_code;
-    
+
     public bool $isSubmitting = false;
+
+    /** Re-run verify if user edited the code mid-flight */
+    public bool $shouldResubmit = false;
+
+    /** Snapshot of the code we’re currently verifying */
+    public ?string $processingCode = null;
 
     public static function getSort(): int
     {
@@ -45,8 +52,8 @@ class Confirm2Fa extends SimplePage
 
     public function mount()
     {
-        [$credentials,$panelId, $remember] = $this->getFlashedData();
-        if (!$credentials || !$panelId) {
+        [$credentials, $panelId, $remember] = $this->getFlashedData();
+        if (! $credentials || ! $panelId) {
             return redirect(Filament::getLoginUrl());
         }
         // Initialize the form with default values
@@ -72,63 +79,95 @@ class Confirm2Fa extends SimplePage
             $credentials[$index] = Crypt::decryptString($value);
         }
 
-        return [$credentials, $panelId,$remember ];
+        return [$credentials, $panelId, $remember];
     }
 
     public function submit(): void
     {
+        // Prevent concurrent submissions; schedule a rerun if called again.
+        if ($this->isSubmitting) {
+            $this->shouldResubmit = true;
+            return;
+        }
+
         $this->isSubmitting = true;
 
-        // Trigger form validation and ensure fields are present.
-        $this->form->validate();
+        try {
+            // Trigger form validation and ensure fields are present.
+            $this->form->validate();
 
+            $user = $this->authenticate();
 
-        $user = $this->authenticate();
+            if (! $user) {
+                $this->redirect(Filament::getUrl());
+                return;
+            }
 
-        if (! $user) {
-            $this->redirect(Filament::getUrl());
-            return;
-        }
+            // Grab latest state and snapshot the code we’re verifying.
+            $state = $this->form->getState();
+            $code = (string) ($state['totp_code'] ?? '');
+            $this->processingCode = $code;
 
-        // Create the TwoFactor validator with the correct request data
-        request()->merge([
-            'totp_code' => $this->form->getState()['totp_code'] ?? '',
-            'safe_device_enable' => $this->form->getState()['safe_device_enable'] ?? false,
-        ]);
+            // Create the TwoFactor validator with the correct request data
+            request()->merge([
+                'totp_code' => $code,
+                'safe_device_enable' => (bool) ($state['safe_device_enable'] ?? false),
+            ]);
 
-        $twoFactorValid = app(FilamentTwoFactor::class, [
-            // Use input field names so the TwoFactor service pulls values from the request.
-            'input' => 'totp_code',
-            'safeDeviceInput' => 'safe_device_enable',
-        ])->validate($user);
+            $twoFactorValid = app(FilamentTwoFactor::class, [
+                // Use input field names so the TwoFactor service pulls values from the request.
+                'input' => 'totp_code',
+                'safeDeviceInput' => 'safe_device_enable',
+            ])->validate($user);
 
-        if ($twoFactorValid) {
-            $sessionKey = config('filament-2fa.login.credential_key', '_2fa_login');
+            if ($twoFactorValid) {
+                $sessionKey = config('filament-2fa.login.credential_key', '_2fa_login');
+
+                Notification::make()
+                    ->title('Success')
+                    ->body(__('filament-2fa::two-factor.success'))
+                    ->icon('heroicon-o-check-circle')
+                    ->color('success')
+                    ->send();
+
+                session()->forget("{$sessionKey}.credentials");
+                session()->forget("{$sessionKey}.remember");
+                session()->forget("{$sessionKey}.panel_id");
+
+                $this->redirectIntended(Filament::getUrl());
+                return;
+            }
 
             Notification::make()
-                ->title('Success')
-                ->body(__('filament-2fa::two-factor.success'))
-                ->icon('heroicon-o-check-circle')
-                ->color('success')
+                ->title('Invalid Code')
+                ->body(__('filament-2fa::two-factor.fail_2fa'))
+                ->icon('heroicon-o-x-circle')
+                ->color('danger')
                 ->send();
 
-            session()->forget("{$sessionKey}.credentials");
-            session()->forget("{$sessionKey}.remember");
-            session()->forget("{$sessionKey}.panel_id");
+        } finally {
+            $this->isSubmitting = false;
 
-            $this->redirectIntended(Filament::getUrl());
+            // If the user edited the code while we were verifying, and it is now "complete",
+            // re-run verification immediately with the latest value.
+            if ($this->shouldResubmit) {
+                $this->shouldResubmit = false;
 
-            return;
+                $latest = (string) ($this->form->getState()['totp_code'] ?? '');
+                if ($latest !== ($this->processingCode ?? '')) {
+                    $totpDigits   = (int) config('two-factor.totp.digits', 6);
+                    $recoveryLen  = (int) config('two-factor.recovery.length', 8);
+                    $len          = strlen($latest);
+
+                    $isTotp      = $len === $totpDigits && ctype_digit($latest);
+                    $isRecovery  = $len === $recoveryLen && preg_match('/[a-zA-Z]/', $latest);
+
+                    if ($isTotp || $isRecovery) {
+                        $this->submit();
+                    }
+                }
+            }
         }
-
-        Notification::make()
-            ->title('Invalid Code')
-            ->body(__('filament-2fa::two-factor.fail_2fa'))
-            ->icon('heroicon-o-x-circle')
-            ->color('danger')
-            ->send();
-        
-        $this->isSubmitting = false;
     }
 
     public function authenticate(): null|bool|Model
@@ -138,13 +177,13 @@ class Confirm2Fa extends SimplePage
         $panel = Filament::getPanel($panelId);
         Filament::setCurrentPanel($panel);
 
-        if (!Filament::auth()->attempt($credentials, $remember)) {
+        if (! Filament::auth()->attempt($credentials, $remember)) {
             return false;
         }
 
         $user = Filament::auth()->user();
 
-        if (!$user instanceof Model) {
+        if (! $user instanceof Model) {
             throw new Exception('The authenticated user object must be an Eloquent model to login.');
         }
 
@@ -167,42 +206,71 @@ class Confirm2Fa extends SimplePage
 
     protected function get2FaFormComponent(): Group
     {
-        return
-            Group::make([
-                ViewField::make('hint')
-                    ->label('')
-                    ->view('filament-2fa::forms.components.hint'),
-                TextInput::make('totp_code')
-                    ->label(__('filament-2fa::two-factor.totp_or_recovery_code'))
-                    ->autofocus()
-                    ->minLength(config('two-factor.totp.digits'))
-                    ->maxLength(8)
-                    ->required()
-                    ->autocomplete(false)
-                    ->extraInputAttributes(['class'=>'text-center','style'=>'font-size:2.6em; letter-spacing:1rem'])
-                    ->live()
-                    ->afterStateUpdated(function ($state) {
-                        $length = strlen($state);
-                        // Auto-submit for numeric TOTP codes (typically 6 digits)
-                        if ($length === config('two-factor.totp.digits') && ctype_digit($state)) {
-                            $this->submit();
-                        }
-                        // Auto-submit for 8-character recovery codes (contain letters)
-                        elseif ($length === 8 && preg_match('/[a-zA-Z]/', $state)) {
-                            $this->submit();
-                        }
-                    }),
-                Toggle::make('safe_device_enable')
-                    ->label(__('filament-2fa::two-factor.enable_safe_device',['days' => config('two-factor.safe_devices.expiration_days')]))
-                    ->hintIcon('heroicon-o-information-circle',__('filament-2fa::two-factor.safe_device_hint'))
-                    ->hintColor('info')
-                    ->inline()
-                    ->onColor('success')
-                    ->offColor('danger')
-                    ->onIcon('heroicon-m-check-circle')
-                    ->offIcon('heroicon-m-x-mark')
-                    ->default(false)
-                    ->visible(config('two-factor.safe_devices.enabled'))
-            ]);
+        return Group::make([
+            ViewField::make('hint')
+                ->label('')
+                ->view('filament-2fa::forms.components.hint'),
+
+            TextInput::make('totp_code')
+                ->label(__('filament-2fa::two-factor.totp_or_recovery_code'))
+                ->autofocus()
+                ->minLength((int) config('two-factor.totp.digits', 6))
+                ->maxLength((int) config('two-factor.recovery.length', 8))
+                ->required()
+                ->autocomplete(false)
+                ->extraInputAttributes([
+                    'class' => 'text-center',
+                    'style' => 'font-size:2.6em; letter-spacing:1rem',
+                    'x-on:input.debounce.150ms' => 'handleOtpInput($event.target.value)',
+                ])
+                ->live(),
+
+//            TextInput::make('totp_code')
+//                ->label(__('filament-2fa::two-factor.totp_or_recovery_code'))
+//                ->autofocus()
+//                ->minLength((int) config('two-factor.totp.digits', 6))
+//                ->maxLength((int) config('two-factor.recovery.length', 8))
+//                ->required()
+//                ->autocomplete(false)
+//                ->extraInputAttributes([
+//                    'class' => 'text-center',
+//                    'style' => 'font-size:2.6em; letter-spacing:1rem',
+//                ])
+//                ->live()
+//                ->afterStateUpdated(function (string $state) {
+//                    $totpDigits  = (int) config('two-factor.totp.digits', 6);
+//                    $recoveryLen = (int) config('two-factor.recovery.length', 8);
+//
+//                    $len        = strlen($state);
+//                    $isTotp     = $len === $totpDigits && ctype_digit($state);
+//                    $isRecovery = $len === $recoveryLen && preg_match('/[a-zA-Z]/', $state);
+//
+//                    if (! ($isTotp || $isRecovery)) {
+//                        return; // not “complete” yet
+//                    }
+//
+//                    if ($this->isSubmitting) {
+//                        // A verify is already running; schedule a re-run after it finishes.
+//                        $this->shouldResubmit = true;
+//                        return;
+//                    }
+//
+//                    $this->submit();
+//                }),
+
+            Toggle::make('safe_device_enable')
+                ->label(__('filament-2fa::two-factor.enable_safe_device', [
+                    'days' => config('two-factor.safe_devices.expiration_days'),
+                ]))
+                ->hintIcon('heroicon-o-information-circle', __('filament-2fa::two-factor.safe_device_hint'))
+                ->hintColor('info')
+                ->inline()
+                ->onColor('success')
+                ->offColor('danger')
+                ->onIcon('heroicon-m-check-circle')
+                ->offIcon('heroicon-m-x-mark')
+                ->default(false)
+                ->visible((bool) config('two-factor.safe_devices.enabled')),
+        ]);
     }
 }

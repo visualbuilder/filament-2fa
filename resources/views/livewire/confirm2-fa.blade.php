@@ -1,21 +1,38 @@
 <x-filament-panels::page.simple>
-    <div x-data="{ isSubmitting: @entangle('isSubmitting') }">
-        <form wire:submit.prevent="submit">
+    <div
+        x-data="{
+            isSubmittingLocal: false,
+            totpDigits: {{ (int) config('two-factor.totp.digits', 6) }},
+            recoveryLen: {{ (int) config('two-factor.recovery.length', 8) }},
+            init() { Livewire.hook('message.processed', () => { this.isSubmittingLocal = false }) },
+            handleOtpInput(v) {
+                if (!v) return;
+                const len = v.length;
+                const isTotp = len === this.totpDigits && /^\d+$/.test(v);
+                const isRecovery = len === this.recoveryLen && /[a-zA-Z]/.test(v);
+                if (!(isTotp || isRecovery)) return;
+
+                if (!this.isSubmittingLocal) this.isSubmittingLocal = true;
+                $wire.set('data.totp_code', v).then(() => $wire.submit());
+            }
+        }"
+    >
+        <form wire:submit.prevent="submit" class="space-y-4">
             {{ $this->form }}
-            <div class="mt-3 text-end">
-                <x-filament::button type="submit" x-bind:disabled="isSubmitting">
-                    <div class="flex items-center">
-                        <template x-if="isSubmitting">
-                            <div class="flex items-center">
-                                <x-filament::loading-indicator class="h-5 w-5 mr-2"/>
-                                <span>Verifying 2FA...</span>
-                            </div>
-                        </template>
-                        <template x-if="!isSubmitting">
-                            <span>Submit</span>
-                        </template>
-                    </div>
-                </x-filament::button>
+
+            {{-- Reserve height, but only SHOW the spinner when verifying --}}
+            <div class="mt-6 h-6 relative">
+                <div
+                    x-cloak
+                    x-show="isSubmittingLocal"
+                    x-transition.opacity.duration.150ms
+                    class="absolute inset-0 flex items-center gap-2 text-sm font-medium
+                           text-primary-600 dark:text-primary-400"
+                    role="status" aria-live="polite"
+                >
+                    <x-filament::loading-indicator class="h-5 w-5" />
+                    <span>{{ __('Verifying 2FA…') }}</span>
+                </div>
             </div>
         </form>
     </div>

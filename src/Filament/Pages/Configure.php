@@ -26,7 +26,9 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
+use Laragear\TwoFactor\Events\TwoFactorEnabled;
 use Livewire\Attributes\Locked;
+use Livewire\Attributes\On;
 use Visualbuilder\Filament2fa\Contracts\TwoFactorAuthenticatable;
 
 class Configure extends SimplePage
@@ -87,6 +89,8 @@ class Configure extends SimplePage
 
     public array $recoveryCodes = [];
 
+    public bool $is2faEnabled = false;
+
     #[Locked]            // prevents client-side mutation and survives re-renders
     public ?array $provisioning = null;
 
@@ -128,7 +132,8 @@ class Configure extends SimplePage
         ];
 
         // Load recovery codes if 2FA is already enabled
-        if ($user->hasTwoFactorEnabled()) {
+        $this->is2faEnabled = $user->hasTwoFactorEnabled();
+        if ($this->is2faEnabled) {
             $this->recoveryCodes = $user->getRecoveryCodes()->values()->all();
         }
 
@@ -214,7 +219,7 @@ class Configure extends SimplePage
                             ->columnSpan(['md' => 1]),
                     ])->columns(['md' => 2]),
                 ])
-                ->visible(! $this->getUser()->hasTwoFactorEnabled()),
+                ->visible(fn () => ! $this->is2faEnabled),
 
             // MANAGE (when enabled)
             Section::make(__('Two-factor is enabled'))
@@ -291,11 +296,9 @@ class Configure extends SimplePage
                         ])
                         ->compact()
                         ->secondary()
-                        ->visible(function(){
-                            return $this->showRecoveryCodes;
-                        }),
+                        ->visible($this->showRecoveryCodes),
                 ])
-                ->visible($this->getUser()->hasTwoFactorEnabled()),
+                ->visible(fn () => $this->is2faEnabled),
         ]);
     }
 
@@ -326,9 +329,41 @@ class Configure extends SimplePage
     {
         $this->getUser()->disableTwoFactorAuth();
         $this->showRecoveryCodes = false;
-        $this->provisioning = null;
         $this->recoveryCodes = [];
+        $this->is2faEnabled = false;
         $this->getUser()->load('twoFactorAuth');
+
+        // Regenerate provisioning data for the setup form
+        $user = $this->getUser();
+        $record = $user->twoFactorAuth ?? $user->getTwoFactorAuth();
+
+        if (!$record) {
+            $record = $user->createTwoFactorAuth();
+        }
+
+        // Ensure the record has all necessary properties
+        $prefix = app()->environment('production') ? '' : '_'.app()->environment();
+        $email = $user->email ?? $user->getAuthIdentifier();
+        if (!$record->label) {
+            $record->label = config('app.name') . $prefix.':' . $email;
+        }
+
+        if (!$record->shared_secret) {
+            $record->shared_secret = static::generateBase32Secret();
+        }
+
+        $secret = $record->toString();
+
+        if (!$record->exists || $record->isDirty('label') || $record->isDirty('shared_secret')) {
+            $record->save();
+        }
+
+        $this->provisioning = [
+            'qr'     => $record->toQr(),
+            'uri'    => $record->toUri(),
+            'secret' => $secret,
+        ];
+
         $this->dispatch('$refresh');
     }
 
@@ -348,14 +383,17 @@ class Configure extends SimplePage
             ->send();
 
         if ($ok) {
-            // Refresh the twoFactorAuth relationship to get the updated state
-            $this->getUser()->load('twoFactorAuth');
+            // Refresh the user and twoFactorAuth relationship completely
+            $user = $this->getUser();
+            $user->refresh();
+            $user->load('twoFactorAuth');
+
+            $this->is2faEnabled = true;
+            $this->recoveryCodes = $user->getRecoveryCodes()->values()->all();
 
             // Clear the form
             $this->data['two_factor_code'] = '';
             $this->form->fill();
-
-            // Force Livewire to refresh the component to update visibility conditions
             $this->dispatch('$refresh');
         }
     }
@@ -367,6 +405,12 @@ class Configure extends SimplePage
             throw new Exception('Authenticated user must be an Eloquent model.');
         }
         return $user;
+    }
+
+    #[On('two-factor-enabled')]
+    public function onTwoFactorEnabled(): void
+    {
+
     }
 
 }
