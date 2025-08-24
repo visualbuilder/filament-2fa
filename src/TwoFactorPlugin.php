@@ -2,11 +2,11 @@
 
 namespace Visualbuilder\Filament2fa;
 
-use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
 use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Visualbuilder\Filament2fa\Filament\Pages\Configure;
+use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
 use Visualbuilder\Filament2fa\Http\Middleware\RedirectIfTwoFactorNotActivated;
 use Visualbuilder\Filament2fa\Http\Middleware\SetRenderLocation;
 use Visualbuilder\Filament2fa\Livewire\Confirm2Fa;
@@ -50,10 +50,19 @@ class TwoFactorPlugin implements Plugin
         $panel->plugins([
 
         ]);
+        
+        // Get panel guard mapping from config (Laravel automatically merges app config with package defaults)
+        $panelId = $panel->getId();
+        $panelGuardMap = config('filament-2fa.banner.panel_guard_map', []);
+        $authGuard = $panelGuardMap[$panelId] ?? $panel->getAuthGuard();
+        
+        $bannerGuards = config('filament-2fa.banner.auth_guards', []);
 
-        $panel->resources([
-            BannerResource::class
-        ]);
+        if (isset($bannerGuards[$authGuard]['can_manage']) && $bannerGuards[$authGuard]['can_manage'] === true) {
+            $panel->resources([
+                BannerResource::class
+            ]);
+        }
 
         $panel->middleware([
             AuthenticateSession::class,
@@ -72,6 +81,5 @@ class TwoFactorPlugin implements Plugin
 
     public function boot(Panel $panel): void
     {
-
     }
 }

@@ -2,53 +2,47 @@
 
 namespace Visualbuilder\Filament2fa\Filament\Resources;
 
+use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Panel;
-use Filament\Schemas\Schema;
-use ReflectionClass;
-use Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Schemas\Components\Fieldset;
 use Filament\Forms\Components\RichEditor;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Schemas\Components\Tabs;
-use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Components\Utilities\Set;
+use Filament\Panel;
 use Filament\Resources\Resource;
-use Filament\Tables;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use ReflectionClass;
 use Visualbuilder\Filament2fa\Enums\ScheduleStatus;
+use Visualbuilder\Filament2fa\Filament\Resources\BannerResource\Pages;
 use Visualbuilder\Filament2fa\Models\Banner;
-use BackedEnum;
 
 class BannerResource extends Resource
 {
     protected static ?string $model = Banner::class;
 
-    protected static string | BackedEnum | null $navigationIcon = 'heroicon-o-rectangle-stack';
-
-    public static function getSlug(?Panel $panel = null): string
-    {
-        return config('filament-2fa.banner.navigation.url');
-    }
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-rectangle-stack';
 
     public static function shouldRegisterNavigation(): bool
     {
@@ -60,6 +54,24 @@ class BannerResource extends Resource
         return config('filament-2fa.banner.navigation.icon');
     }
 
+    public static function canViewAny(): bool
+    {
+        $panel = Filament::getCurrentPanel();
+        if (!$panel) {
+            return false;
+        }
+
+        // Get panel guard mapping from config (Laravel automatically merges app config with package defaults)
+        $panelId = $panel->getId();
+        $panelGuardMap = config('filament-2fa.banner.panel_guard_map', []);
+        $authGuard = $panelGuardMap[$panelId] ?? $panel->getAuthGuard();
+
+        $bannerGuards = config('filament-2fa.banner.auth_guards', []);
+
+        return isset($bannerGuards[$authGuard]['can_manage'])
+            && $bannerGuards[$authGuard]['can_manage'] === true;
+    }
+
     public static function getNavigationLabel(): string
     {
         return config('filament-2fa.banner.navigation.label');
@@ -69,7 +81,7 @@ class BannerResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make()->schema([
+                Section::make()->columnSpanFull()->schema([
                     Tabs::make('Tabs')
                         ->tabs([
                             Tab::make('General')
@@ -151,7 +163,7 @@ class BannerResource extends Resource
                                                 ->selectablePlaceholder(false)
                                                 ->default('solid')
                                                 ->options([
-                                                    'solid' => 'Solid',
+                                                    'solid'    => 'Solid',
                                                     'gradient' => 'Gradient',
                                                 ])->default('solid'),
                                             ColorPicker::make('start_color')
@@ -191,56 +203,16 @@ class BannerResource extends Resource
             ]);
     }
 
-    public static function table(Table $table): Table
+    private static function getAuthGuards()
     {
-        return $table
-            ->columns([
-                TextColumn::make('name')->searchable(),
-                TextColumn::make('auth_guards')->searchable(),
-                TextColumn::make('render_location')
-                    ->formatStateUsing(fn(string $state) => self::renderLocation($state)),
-                IconColumn::make('can_be_closed_by_user')->label('Dismissable')->alignCenter(),
-                IconColumn::make('is_2fa_setup')->label('2FA Banner')->alignCenter(),
-                IconColumn::make('is_active')->alignCenter()
-            ])
-            ->filters([
-                //
-            ])
-            ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
-            ])
-            ->headerActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                    BulkAction::make('disableSelected')
-                        ->color('warning')
-                        ->icon('heroicon-m-x-circle')
-                        ->requiresConfirmation()
-                        ->action(fn(Collection $records) => $records->each->update(['is_active' => false])),
-                    BulkAction::make('enableSelected')
-                        ->color('success')
-                        ->icon('heroicon-m-check-badge')
-                        ->requiresConfirmation()
-                        ->action(fn(Collection $records) => $records->each->update(['is_active' => true]))
-                ]),
-            ]);
+        $filteredGuards = Arr::where(config('filament-2fa.banner.auth_guards'), fn(array $value, string $key) => (bool) $value['can_see_banner'] === true);
+        [$keys, $values] = Arr::divide($filteredGuards);
+        return array_combine(array_values($keys), array_values($keys));
     }
 
-    public static function getRelations(): array
+    private static function renderLocations(): array
     {
-        return [
-            //
-        ];
-    }
-
-    public static function getPages(): array
-    {
-        return [
-            'index' => Pages\ListBanners::route('/'),
-            'create' => Pages\CreateBanner::route('/create'),
-            'edit' => Pages\EditBanner::route('/{record}/edit'),
-        ];
+        return (new ReflectionClass(PanelsRenderHook::class))->getConstants();
     }
 
     private static function getScopes(): array
@@ -261,8 +233,19 @@ class BannerResource extends Resource
         return $scopes;
     }
 
+    private static function getPanelResources(): array
+    {
+        return array_values(Filament::getCurrentPanel()->getResources());
+    }
+
+    public static function getSlug(?Panel $panel = null): string
+    {
+        return config('filament-2fa.banner.navigation.url');
+    }
+
     /**
-     * @param resource $resourceClass
+     * @param  resource  $resourceClass
+     *
      * @return string[]
      */
     private static function getPagesForResource($resourceClass): array
@@ -278,14 +261,17 @@ class BannerResource extends Resource
         return $pages;
     }
 
-    private static function getPanelResources(): array
+    public static function getPages(): array
     {
-        return array_values(Filament::getCurrentPanel()->getResources());
+        return [
+            'index'  => Pages\ListBanners::route('/'),
+            'create' => Pages\CreateBanner::route('/create'),
+            'edit'   => Pages\EditBanner::route('/{record}/edit'),
+        ];
     }
 
     private static function calculateScheduleStatus($start_time, $end_time): ScheduleStatus|string
     {
-
         if (is_null($start_time) && is_null($end_time)) {
             return '';
         }
@@ -327,17 +313,40 @@ class BannerResource extends Resource
         return '';
     }
 
-
-    private static function getAuthGuards()
+    public static function table(Table $table): Table
     {
-        $filteredGuards = Arr::where(config('filament-2fa.banner.auth_guards'), fn(array $value, string $key) => (bool)$value['can_see_banner'] === true);
-        [$keys, $values] = Arr::divide($filteredGuards);
-        return array_combine(array_values($keys), array_values($keys));
-    }
-
-    private static function renderLocations(): array
-    {
-        return (new ReflectionClass(PanelsRenderHook::class))->getConstants();
+        return $table
+            ->columns([
+                TextColumn::make('name')->searchable(),
+                TextColumn::make('auth_guards')->searchable(),
+                TextColumn::make('render_location')
+                    ->formatStateUsing(fn(string $state) => self::renderLocation($state)),
+                IconColumn::make('can_be_closed_by_user')->label('Dismissable')->alignCenter(),
+                IconColumn::make('is_2fa_setup')->label('2FA Banner')->alignCenter(),
+                IconColumn::make('is_active')->alignCenter()
+            ])
+            ->filters([
+                //
+            ])
+            ->recordActions([
+                EditAction::make(),
+                DeleteAction::make(),
+            ])
+            ->headerActions([
+                BulkActionGroup::make([
+                    DeleteBulkAction::make(),
+                    BulkAction::make('disableSelected')
+                        ->color('warning')
+                        ->icon('heroicon-m-x-circle')
+                        ->requiresConfirmation()
+                        ->action(fn(Collection $records) => $records->each->update(['is_active' => false])),
+                    BulkAction::make('enableSelected')
+                        ->color('success')
+                        ->icon('heroicon-m-check-badge')
+                        ->requiresConfirmation()
+                        ->action(fn(Collection $records) => $records->each->update(['is_active' => true]))
+                ]),
+            ]);
     }
 
     private static function renderLocation(string $location): string
@@ -345,5 +354,12 @@ class BannerResource extends Resource
         $locations = self::renderLocations();
 
         return array_key_exists($location, $locations) ? $locations[$location] : '';
+    }
+
+    public static function getRelations(): array
+    {
+        return [
+            //
+        ];
     }
 }

@@ -3,34 +3,34 @@
 use Filament\Pages\Enums\SubNavigationPosition;
 
 return [
-    'defaultDateTimeDisplayFormat'  => 'd M Y H:i',
+    'defaultDateTimeDisplayFormat' => 'd M Y H:i',
 
     /**
      * When two factor is required exclude these routes from redirect
      */
-    'excluded_routes' => [
+    'excluded_routes'              => [
         'two-factor-authentication',
         'confirm-2fa',
         'logout',
     ],
 
-    'login' => [
-        'credential_key' => '_2fa_login',
+    'login'       => [
+        'credential_key'        => '_2fa_login',
         'confirm_totp_page_url' => 'confirm-2fa'
     ],
 
     /**
      * 2FA link options
      */
-    'navigation' => [
+    'navigation'  => [
         'visible_on_navbar' => true,
-        'icon' => 'heroicon-o-key',
-        'group' => 'Auth Security',
-        'label' => 'Two Factor Auth',
-        'url' => 'two-factor-authentication',
-        'cluster' => null,
-        'sort' => 1,
-        'subnav_position' => SubNavigationPosition::Top
+        'icon'              => 'heroicon-o-key',
+        'group'             => 'Auth Security',
+        'label'             => 'Two Factor Auth',
+        'url'               => 'two-factor-authentication',
+        'cluster'           => null,
+        'sort'              => 1,
+        'subnav_position'   => SubNavigationPosition::Top
     ],
 
     /**
@@ -38,7 +38,7 @@ return [
      */
     'auth_guards' => [
         'web' => [
-            'enabled' => 'true',
+            'enabled'   => 'true',
             'mandatory' => false
         ]
     ],
@@ -46,12 +46,24 @@ return [
     'banner' => [
 
         /**
+         * Map panel IDs to their auth guards for conditional resource registration
+         * This is needed because during plugin registration, $panel->getAuthGuard()
+         * may not return the correct guard. Override this in your app's config file
+         * if your panel IDs don't match the default pattern.
+         *
+         * Exapmle of Panel ID and auth guard
+         */
+        'panel_guard_map' => [
+            'admin' => 'web',
+        ],
+
+        /**
          * Configure which auth guards banners should apply to
          * This will change the dropdown in the banner editor
          */
-        'auth_guards' => [
+        'auth_guards'     => [
             'web' => [
-                'can_manage' => true,
+                'can_manage'     => true,
                 'can_see_banner' => true,
             ]
         ],
@@ -59,11 +71,11 @@ return [
         /**
          * Navigation link options
          */
-        'navigation' => [
-            'icon' => 'heroicon-m-megaphone',
+        'navigation'      => [
+            'icon'  => 'heroicon-m-megaphone',
             'label' => 'Banners',
-            'url' => 'banner-manager',
-            'sort' => 50,
+            'url'   => 'banner-manager',
+            'sort'  => 50,
         ],
         /**
          * Do not show banners on these routes

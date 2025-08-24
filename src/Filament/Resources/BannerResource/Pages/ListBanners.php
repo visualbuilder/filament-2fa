@@ -11,6 +11,7 @@ class ListBanners extends ListRecords
 {
     protected static string $resource = BannerResource::class;
 
+    protected Width | string | null $maxContentWidth = Width::SevenExtraLarge;
 
     protected function getHeaderActions(): array
     {
