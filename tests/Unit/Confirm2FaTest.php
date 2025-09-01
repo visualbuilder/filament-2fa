@@ -101,3 +101,56 @@ it('Confirm 2FA TOTP code', function () {
         ->call('submit');
     expect(auth()->user()->email)->toEqual('admin@domain.com');
 });
+
+it('does not remember the device when toggle is off', function () {
+    $user = $this->createUser();
+    $user->twoFactorAuth()->save(
+        TwoFactorAuthentication::factory()->make()
+    );
+    expect($user->hasTwoFactorEnabled())->toBeTrue();
+
+    livewire(Login::class)
+        ->assertFormExists()
+        ->fillForm([
+            'email' => 'admin@domain.com',
+            'password' => 'password'
+        ])
+        ->call('authenticate')
+        ->assertRedirect(config('filament-2fa.login.confirm_totp_page_url'));
+
+    livewire(Confirm2Fa::class)
+        ->fillForm([
+            'totp_code' => $user->makeTwoFactorCode(),
+        ])
+        ->call('submit');
+
+    $user->refresh();
+    expect($user->twoFactorAuth->safe_devices)->toBeEmpty();
+});
+
+it('remembers the device when toggle is on', function () {
+    $user = $this->createUser();
+    $user->twoFactorAuth()->save(
+        TwoFactorAuthentication::factory()->make()
+    );
+    expect($user->hasTwoFactorEnabled())->toBeTrue();
+
+    livewire(Login::class)
+        ->assertFormExists()
+        ->fillForm([
+            'email' => 'admin@domain.com',
+            'password' => 'password'
+        ])
+        ->call('authenticate')
+        ->assertRedirect(config('filament-2fa.login.confirm_totp_page_url'));
+
+    livewire(Confirm2Fa::class)
+        ->fillForm([
+            'totp_code' => $user->makeTwoFactorCode(),
+            'safe_device_enable' => true,
+        ])
+        ->call('submit');
+
+    $user->refresh();
+    expect($user->twoFactorAuth->safe_devices)->not()->toBeEmpty();
+});
