@@ -299,7 +299,17 @@ class Configure extends SimplePage
                         ->visible($this->showRecoveryCodes),
                 ])
                 ->visible(fn () => $this->is2faEnabled),
+
+            ActionsBar::make([
+                Action::make('backToDashboard')
+                    ->label(__('filament-2fa::two-factor.back_to_dashboard'))
+                    ->icon('heroicon-m-arrow-uturn-left')
+                    ->url(Filament::getUrl())
+                    ->color('gray'),
+            ])->alignment(Alignment::Start),
         ]);
+
+
     }
 
     protected function getFormActions(): array

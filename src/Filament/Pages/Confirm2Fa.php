@@ -113,15 +113,10 @@ class Confirm2Fa extends SimplePage
             $code = (string) ($state['totp_code'] ?? '');
             $this->processingCode = $code;
 
-            $requestData = [
+            request()->merge([
                 'totp_code' => $code,
-            ];
-
-            if ($state['safe_device_enable'] ?? false) {
-                $requestData['safe_device_enable'] = true;
-            }
-
-            request()->merge($requestData);
+                'safe_device_enable' => (bool) ($state['safe_device_enable'] ?? false),
+            ]);
 
             $twoFactorValid = app(\Visualbuilder\Filament2fa\FilamentTwoFactor::class, [
                 'input' => 'totp_code',
