@@ -9,6 +9,9 @@ use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Spatie\LaravelPackageTools\Package;
 use Spatie\LaravelPackageTools\PackageServiceProvider;
+use Visualbuilder\Filament2fa\Filament\Pages\Configure;
+use Visualbuilder\Filament2fa\Filament\Pages\Confirm2Fa;
+use Visualbuilder\Filament2fa\Filament\Pages\Login;
 use Visualbuilder\Filament2fa\Http\Middleware\EnsureTwoFactorSession;
 
 
@@ -43,6 +46,11 @@ class Filament2faServiceProvider extends PackageServiceProvider
         }
 
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'filament-2fa');
+
+        Livewire::component(app(Confirm2Fa::class)->getName(), Confirm2Fa::class);
+        Livewire::component(app(Configure::class)->getName(), Configure::class);
+        Livewire::component(app(Login::class)->getName(), Login::class);
+
     }
 
     protected function publishMigrations()
@@ -87,6 +95,6 @@ class Filament2faServiceProvider extends PackageServiceProvider
          * Add middleware to ensure 2fa confirmation is only loaded when we have valid session credentials
          */
         app('router')->aliasMiddleware('2fa.is_login_session',EnsureTwoFactorSession::class);
-        
+
     }
 }
