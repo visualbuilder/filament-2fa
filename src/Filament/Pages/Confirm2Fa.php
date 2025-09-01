@@ -1,5 +1,5 @@
 <?php
-namespace Visualbuilder\Filament2fa\Livewire;
+namespace Visualbuilder\Filament2fa\Filament\Pages;
 
 use Exception;
 use Filament\Facades\Filament;
@@ -10,8 +10,10 @@ use Filament\Forms\Components\ViewField;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
+use Filament\Pages\Concerns\HasRoutes;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
+use Filament\Panel\Concerns\HasNavigation;
 use Filament\Schemas\Components\Group;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
@@ -21,6 +23,7 @@ use Visualbuilder\Filament2fa\FilamentTwoFactor;
 class Confirm2Fa extends SimplePage
 {
     use InteractsWithForms, InteractsWithFormActions;
+    use HasRoutes;
 
     public static ?string $title = 'Confirm your 2FA code';
 
@@ -61,6 +64,11 @@ class Confirm2Fa extends SimplePage
             'totp_code' => '',
             'safe_device_enable' => false,
         ]);
+    }
+
+    public static function registerNavigationItems(): void
+    {
+        return;
     }
 
     /**

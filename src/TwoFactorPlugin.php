@@ -6,10 +6,11 @@ use Filament\Contracts\Plugin;
 use Filament\Panel;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Visualbuilder\Filament2fa\Filament\Pages\Configure;
+use Visualbuilder\Filament2fa\Filament\Pages\Confirm2Fa;
 use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
 use Visualbuilder\Filament2fa\Http\Middleware\RedirectIfTwoFactorNotActivated;
 use Visualbuilder\Filament2fa\Http\Middleware\SetRenderLocation;
-use Visualbuilder\Filament2fa\Livewire\Confirm2Fa;
+
 
 class TwoFactorPlugin implements Plugin
 {
@@ -50,12 +51,12 @@ class TwoFactorPlugin implements Plugin
         $panel->plugins([
 
         ]);
-        
+
         // Get panel guard mapping from config (Laravel automatically merges app config with package defaults)
         $panelId = $panel->getId();
         $panelGuardMap = config('filament-2fa.banner.panel_guard_map', []);
         $authGuard = $panelGuardMap[$panelId] ?? $panel->getAuthGuard();
-        
+
         $bannerGuards = config('filament-2fa.banner.auth_guards', []);
 
         if (isset($bannerGuards[$authGuard]['can_manage']) && $bannerGuards[$authGuard]['can_manage'] === true) {
@@ -71,11 +72,12 @@ class TwoFactorPlugin implements Plugin
         ], true);
 
         $panel->pages([
-            Configure::class
+            Configure::class,
+            Confirm2Fa::class
         ]);
 
         $panel->widgets([
-            Confirm2Fa::class
+
         ]);
     }
 
