@@ -27,7 +27,7 @@ class Confirm2Fa extends SimplePage
 
     public static ?string $title = 'Confirm your 2FA code';
 
-    protected string $view = 'filament-2fa::livewire.confirm2-fa';
+    protected string $view = 'filament-2fa::pages.confirm2-fa';
 
     public ?array $data = [];
 
