@@ -47,9 +47,12 @@ class Filament2faServiceProvider extends PackageServiceProvider
 
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'filament-2fa');
 
-        Livewire::component(app(Confirm2Fa::class)->getName(), Confirm2Fa::class);
-        Livewire::component(app(Configure::class)->getName(), Configure::class);
-        Livewire::component(app(Login::class)->getName(), Login::class);
+        foreach ([Confirm2Fa::class, Configure::class, Login::class] as $component) {
+            Livewire::component(
+                Str::of($component)->replace('\\', '.')->kebab()->toString(),
+                $component
+            );
+        }
 
     }
 
