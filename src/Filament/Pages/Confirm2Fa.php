@@ -214,7 +214,7 @@ class Confirm2Fa extends SimplePage
     {
         return Group::make([
             ViewField::make('hint')
-                ->label('')
+                ->hiddenLabel()
                 ->view('filament-2fa::forms.components.hint'),
 
             TextInput::make('totp_code')

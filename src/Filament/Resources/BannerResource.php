@@ -113,14 +113,14 @@ class BannerResource extends Resource
                                         ->hintAction(Action::make('help')
                                             ->icon('heroicon-o-question-mark-circle')
                                             ->extraAttributes(['class' => 'text-gray-500'])
-                                            ->label('')
+                                            ->hiddenLabel()
                                             ->tooltip('With render location, you can select where a banner is rendered on the page. In combination with scopes, this becomes a powerful tool to manage where and when your banners are displayed. You can choose to render banners in the header, sidebar, or other strategic locations to maximize their visibility and impact.'))
                                         ->options(self::renderLocations()),
 
                                     Select::make('scope')
                                         ->hintAction(Action::make('help')
                                             ->icon('heroicon-o-question-mark-circle')
-                                            ->label('')
+                                            ->hiddenLabel()
                                             ->extraAttributes(['class' => 'text-gray-500'])
                                             ->tooltip('With scoping, you can control where your banner is displayed. You can target your banner to specific pages or entire resources, ensuring it is shown to the right audience at the right time.'))
                                         ->searchable()
