@@ -18,6 +18,11 @@ class CreateBanner extends CreateRecord
         ];
     }
 
+    public function getMaxContentWidth(): Width | string | null
+    {
+        return Width::ScreenExtraLarge;
+    }
+    
     public function getLayout(): string
     {
         return 'filament-panels::components.layout.simple';

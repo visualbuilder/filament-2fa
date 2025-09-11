@@ -212,7 +212,11 @@ class BannerResource extends Resource
 
     private static function renderLocations(): array
     {
-        return (new ReflectionClass(PanelsRenderHook::class))->getConstants();
+        $constants = (new ReflectionClass(PanelsRenderHook::class))->getConstants();
+        
+        // Flip the array so that the actual hook values are the keys (what gets saved)
+        // and the constant names are the labels (what the user sees)
+        return array_flip($constants);
     }
 
     private static function getScopes(): array
@@ -351,9 +355,19 @@ class BannerResource extends Resource
 
     private static function renderLocation(string $location): string
     {
-        $locations = self::renderLocations();
-
-        return array_key_exists($location, $locations) ? $locations[$location] : '';
+        $constants = (new ReflectionClass(PanelsRenderHook::class))->getConstants();
+        
+        // If location is a hook value (panels::*), find the constant name
+        if (in_array($location, $constants)) {
+            return array_search($location, $constants);
+        }
+        
+        // If location is a constant name, return it as-is (for backward compatibility)
+        if (array_key_exists($location, $constants)) {
+            return $location;
+        }
+        
+        return $location;
     }
 
     public static function getRelations(): array
