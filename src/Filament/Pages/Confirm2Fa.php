@@ -16,6 +16,7 @@ use Filament\Pages\SimplePage;
 use Filament\Panel\Concerns\HasNavigation;
 use Filament\Schemas\Components\Group;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Validation\ValidationException;
 use Visualbuilder\Filament2fa\FilamentTwoFactor;
@@ -102,10 +103,18 @@ class Confirm2Fa extends SimplePage
         try {
             $this->form->validate();
 
-            $user = $this->authenticate();
+            //Get user WITHOUT logging in first, validate TOTP, then authenticate
+            $user = $this->getUser();
 
             if (! $user) {
-                $this->redirect(Filament::getUrl());
+                Notification::make()
+                    ->title('Session Expired')
+                    ->body('Your login session has expired. Please log in again.')
+                    ->icon('heroicon-o-x-circle')
+                    ->color('danger')
+                    ->send();
+
+                $this->redirect(Filament::getLoginUrl());
                 return;
             }
 
@@ -123,15 +132,19 @@ class Confirm2Fa extends SimplePage
 
             request()->merge($requestData);
 
-            $twoFactorValid = app(\Visualbuilder\Filament2fa\FilamentTwoFactor::class, [
+            // Validate TOTP BEFORE authenticating
+            $twoFactorValid = app(FilamentTwoFactor::class, [
                 'input' => 'totp_code',
                 'safeDeviceInput' => 'safe_device_enable',
             ])->validate($user);
 
             if ($twoFactorValid) {
+                // Only authenticate AFTER successful TOTP validation
+                $this->authenticate($user);
+
                 $sessionKey = config('filament-2fa.login.credential_key', '_2fa_login');
 
-                \Filament\Notifications\Notification::make()
+                Notification::make()
                     ->title('Success')
                     ->body(__('filament-2fa::two-factor.success'))
                     ->icon('heroicon-o-check-circle')
@@ -142,11 +155,12 @@ class Confirm2Fa extends SimplePage
                 session()->forget("{$sessionKey}.remember");
                 session()->forget("{$sessionKey}.panel_id");
 
-                $this->redirectIntended(\Filament\Facades\Filament::getUrl());
+                $this->redirectIntended(Filament::getUrl());
                 return;
             }
 
-            \Filament\Notifications\Notification::make()
+            // User is NOT logged in when code is invalid
+            Notification::make()
                 ->title('Invalid Code')
                 ->body(__('filament-2fa::two-factor.fail_2fa'))
                 ->icon('heroicon-o-x-circle')
@@ -181,24 +195,57 @@ class Confirm2Fa extends SimplePage
     }
 
 
-    public function authenticate(): null|bool|Model
+    /**
+     * Get the user from session credentials WITHOUT logging them in.
+     * This allows TOTP validation before authentication.
+     */
+    protected function getUser(): ?Model
     {
         [$credentials, $panelId, $remember] = $this->getFlashedData();
+
+        if (! $credentials || ! $panelId) {
+            return null;
+        }
 
         $panel = Filament::getPanel($panelId);
         Filament::setCurrentPanel($panel);
 
-        if (! Filament::auth()->attempt($credentials, $remember)) {
-            return false;
+        $guard = $panel->getAuthGuard();
+        $provider = Auth::guard($guard)->getProvider();
+
+        // Retrieve user by credentials without logging in
+        $user = $provider->retrieveByCredentials($credentials);
+
+        if (! $user) {
+            return null;
         }
 
-        $user = Filament::auth()->user();
+        // Validate the credentials match
+        if (! $provider->validateCredentials($user, $credentials)) {
+            return null;
+        }
 
         if (! $user instanceof Model) {
             throw new Exception('The authenticated user object must be an Eloquent model to login.');
         }
 
         return $user;
+    }
+
+    /**
+     * Authenticate (log in) a user after TOTP has been validated.
+     */
+    public function authenticate(Model $user): void
+    {
+        [$credentials, $panelId, $remember] = $this->getFlashedData();
+
+        $panel = Filament::getPanel($panelId);
+        Filament::setCurrentPanel($panel);
+
+        $guard = $panel->getAuthGuard();
+        Auth::guard($guard)->login($user, $remember);
+
+        session()->regenerate();
     }
 
     protected function throwTotpcodeValidationException(): never
