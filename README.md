@@ -10,12 +10,23 @@ Requires an app like Authy or Google Authenticator to generate Time-based One Ti
 
 
 
+## Version Compatibility
+
+| Package Version | Filament | Laravel | PHP |
+|-----------------|----------|---------|-----|
+| 5.x | 5.x | 11.x, 12.x | 8.2+ |
+| 4.x | 4.x | 11.x | 8.2+ |
+
 ## Installation
 
 You can install the package via composer:
 
 ```bash
-composer require visualbuilder/filament-2fa
+# For Filament 5.x
+composer require visualbuilder/filament-2fa:^5.0
+
+# For Filament 4.x
+composer require visualbuilder/filament-2fa:^4.0
 ```
 
 You can publish and run the migrations with:
@@ -204,7 +215,7 @@ return [
 ```
 If the mandatory authentication guard user has not set up 2FA, they will be redirected to the two-factor authentication setup page by the **RedirectIfTwoFactorNotActivated** middleware.
 
-The **SetRenderLocation** middleware will display a notification banner on a page to remind to enable 2FAThe SetRenderLocationmiddleware will display a notification banner on a page to remind users to enable 2FA.
+The **SetRenderLocation** middleware will display a notification banner on a page to remind users to enable 2FA.
 
 ### 2FA Notification Banner
 In the configuration, if the auth guard is enabled to manage the banner, the user can create, edit, delete, and enable/disable the banner. 
