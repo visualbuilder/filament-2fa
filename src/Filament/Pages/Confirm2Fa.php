@@ -12,7 +12,9 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\HasRoutes;
 use Filament\Pages\Concerns\InteractsWithFormActions;
+use Filament\Pages\PageConfiguration;
 use Filament\Pages\SimplePage;
+use Filament\Panel;
 use Filament\Panel\Concerns\HasNavigation;
 use Filament\Schemas\Components\Group;
 use Illuminate\Database\Eloquent\Model;
@@ -43,6 +45,11 @@ class Confirm2Fa extends SimplePage
 
     /** Snapshot of the code we’re currently verifying */
     public ?string $processingCode = null;
+
+    public static function getConfiguration(?Panel $panel = null): ?PageConfiguration
+    {
+        return null;
+    }
 
     public static function getSort(): int
     {
