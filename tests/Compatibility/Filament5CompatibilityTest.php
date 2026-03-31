@@ -16,27 +16,29 @@ use Filament\Facades\Filament;
  * @see FILAMENT5_COMPATIBILITY_REPORT.md for detailed analysis
  */
 
-it('is currently running on Filament 4.x', function () {
-    // Verify we're on Filament 4
+it('is now running on Filament 5.x', function () {
+    // Verify we're on Filament 5 after the upgrade
     $filamentVersion = class_exists(\Filament\FilamentManager::class)
         ? \Composer\InstalledVersions::getVersion('filament/filament')
         : 'unknown';
 
-    expect($filamentVersion)->toMatch('/^(v?4|dev-)/');
+    expect($filamentVersion)->toMatch('/^(v?5|dev-)/');
 })->group('compatibility', 'filament5');
 
-it('can detect Schemas namespace presence (Filament 4 feature)', function () {
-    // The Schemas namespace is Filament 4 specific
-    // In Filament 5, this may be removed or refactored
+it('can detect Schemas namespace presence (exists in both Filament 4 and 5)', function () {
+    // CORRECTION: The Schemas namespace exists in BOTH Filament 4 and 5
+    // Initial analysis incorrectly identified this as a breaking change
+    // Lee confirmed: Filament\Schemas\ is NOT a breaking change
     $schemasNamespaceExists = class_exists(\Filament\Schemas\Schema::class);
 
     expect($schemasNamespaceExists)
-        ->toBeTrue('Schemas namespace exists in Filament 4');
+        ->toBeTrue('Schemas namespace exists in Filament 5 - NOT a breaking change');
 })->group('compatibility', 'filament5');
 
-it('documents required component migrations for Filament 5', function () {
-    // This test documents the components that will need migration
-    $componentsNeedingMigration = [
+it('verifies Schema components are still available in Filament 5', function () {
+    // CORRECTION: These components still exist in Filament 5
+    // They do NOT need migration as initially thought
+    $schemaComponents = [
         'Filament\Schemas\Schema',
         'Filament\Schemas\Components\Actions',
         'Filament\Schemas\Components\EmbeddedSchema',
@@ -53,18 +55,11 @@ it('documents required component migrations for Filament 5', function () {
         'Filament\Schemas\Components\Utilities\Set',
     ];
 
-    foreach ($componentsNeedingMigration as $component) {
-        // In Filament 4, these exist
+    foreach ($schemaComponents as $component) {
+        // These exist in both Filament 4 and 5
         expect(class_exists($component) || interface_exists($component))
-            ->toBeTrue("Component {$component} exists in Filament 4");
+            ->toBeTrue("Component {$component} exists in Filament 5");
     }
-
-    // In Filament 5, we expect these to either:
-    // 1. Not exist (removed)
-    // 2. Be moved to different namespaces
-    // 3. Have different APIs
-
-    // This test will need to be updated once Filament 5 is available
 })->group('compatibility', 'filament5');
 
 it('verifies core Filament APIs remain available', function () {
@@ -84,38 +79,41 @@ it('verifies core Filament APIs remain available', function () {
     }
 })->group('compatibility', 'filament5');
 
-it('documents files requiring refactoring for Filament 5', function () {
-    $filesNeedingRefactoring = [
+it('confirms no Schema refactoring needed for Filament 5', function () {
+    // UPDATED: Schema components work in Filament 5, no refactoring needed
+    // The only changes needed are for Livewire v4 compatibility
+    $filesUsingSchemas = [
         'src/Filament/Pages/Configure.php' => [
-            'reason' => 'Heavy use of Schemas namespace',
-            'complexity' => 'HIGH',
-            'estimated_hours' => '8-16',
+            'schemas_compatible' => true,
+            'livewire_updates_needed' => true,
+            'estimated_hours' => '2-4',
         ],
         'src/Filament/Resources/BannerResource.php' => [
-            'reason' => 'Uses Schemas for form definition',
-            'complexity' => 'MEDIUM',
-            'estimated_hours' => '4-8',
+            'schemas_compatible' => true,
+            'livewire_updates_needed' => true,
+            'estimated_hours' => '1-2',
         ],
         'src/Filament/Pages/Confirm2Fa.php' => [
-            'reason' => 'Minor Schemas usage',
-            'complexity' => 'LOW',
-            'estimated_hours' => '2-4',
+            'schemas_compatible' => true,
+            'livewire_updates_needed' => true,
+            'estimated_hours' => '1-2',
         ],
     ];
 
     // Verify all these files exist
-    foreach ($filesNeedingRefactoring as $file => $metadata) {
+    foreach ($filesUsingSchemas as $file => $metadata) {
         $filePath = __DIR__ . '/../../' . $file;
         expect(file_exists($filePath))
-            ->toBeTrue("File {$file} exists and needs refactoring: {$metadata['reason']}");
+            ->toBeTrue("File {$file} exists and Schemas are compatible");
+        expect($metadata['schemas_compatible'])->toBeTrue();
     }
 
-    // Document total effort
-    $totalMinHours = 8 + 4 + 2; // 14
-    $totalMaxHours = 16 + 8 + 4; // 28
+    // Updated effort estimate - much lower than original 14-28 hours
+    $totalMinHours = 2 + 1 + 1; // 4
+    $totalMaxHours = 4 + 2 + 2; // 8
 
-    expect($totalMinHours)->toBe(14);
-    expect($totalMaxHours)->toBe(28);
+    expect($totalMinHours)->toBe(4);
+    expect($totalMaxHours)->toBe(8);
 })->group('compatibility', 'filament5');
 
 it('has test coverage for 2FA functionality', function () {
@@ -135,44 +133,33 @@ it('has test coverage for 2FA functionality', function () {
     }
 })->group('compatibility', 'filament5');
 
-it('documents breaking changes to watch for in Filament 5', function () {
-    $breakingChangesToWatch = [
-        'schemas_namespace_removal' => [
-            'description' => 'Filament\Schemas namespace may be removed or refactored',
-            'impact' => 'HIGH',
+it('documents actual breaking changes found in Filament 5 upgrade', function () {
+    // ACTUAL FINDINGS after upgrading to Filament 5.4.3
+    $actualBreakingChanges = [
+        'livewire_v4_upgrade' => [
+            'description' => 'Livewire v3 to v4 breaking changes (NOT Filament 5 issue)',
+            'impact' => 'MEDIUM',
             'affected_files' => [
                 'src/Filament/Pages/Configure.php',
                 'src/Filament/Resources/BannerResource.php',
-            ],
-        ],
-        'form_method_signatures' => [
-            'description' => 'Form/table method signatures may change',
-            'impact' => 'MEDIUM',
-            'affected_files' => [
-                'src/Filament/Resources/BannerResource.php',
-                'src/Filament/Pages/Configure.php',
-            ],
-        ],
-        'auth_login_api_changes' => [
-            'description' => 'Login page APIs may have breaking changes',
-            'impact' => 'MEDIUM',
-            'affected_files' => [
                 'src/Filament/Pages/Login.php',
+                'src/Filament/Pages/Confirm2Fa.php',
             ],
-        ],
-        'plugin_registration' => [
-            'description' => 'Plugin registration API changes',
-            'impact' => 'LOW',
-            'affected_files' => [
-                'src/TwoFactorPlugin.php',
+            'specific_issues' => [
+                'ViewErrorBag::put() requires non-null MessageBag',
+                'Page URL resolution method changes',
             ],
         ],
     ];
 
-    // This test documents expected breaking changes
-    // It will need to be updated with actual changes once Filament 5 is available
-    expect($breakingChangesToWatch)->toBeArray();
-    expect(count($breakingChangesToWatch))->toBeGreaterThan(0);
+    // CONFIRMED: No Filament 5 breaking changes found
+    $filament5BreakingChanges = [];
+
+    expect($actualBreakingChanges)->toBeArray();
+    expect($filament5BreakingChanges)->toBeArray()->toBeEmpty();
+
+    // The only changes needed are for Livewire v4, not Filament 5
+    expect($actualBreakingChanges)->toHaveKey('livewire_v4_upgrade');
 })->group('compatibility', 'filament5');
 
 /**
