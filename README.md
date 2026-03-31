@@ -1,7 +1,7 @@
 # Two Factor Auth for filament
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/visualbuilder/filament-2fa.svg?style=flat-square)](https://packagist.org/packages/visualbuilder/filament-2fa)
-[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/visualbuilder/filament-2fa/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/visualbuilder/filament-2fa/actions?query=workflow%3Arun-tests+branch%3Amain)
+[![GitHub Tests Action Status](https://img.shields.io/github/actions/workflow/status/visualbuilder/filament-2fa/run-tests.yml?branch=5.x&label=tests&style=flat-square)](https://github.com/visualbuilder/filament-2fa/actions?query=workflow%3Arun-tests+branch%3A5.x)
 [![Total Downloads](https://img.shields.io/packagist/dt/visualbuilder/filament-2fa.svg?style=flat-square)](https://packagist.org/packages/visualbuilder/filament-2fa)
 
 
