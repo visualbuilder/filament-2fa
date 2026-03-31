@@ -74,6 +74,9 @@
             "aliases": {
                 "Filament2fa": "Visualbuilder\\Filament2fa\\Facades\\Filament2fa"
             }
+        },
+        "branch-alias": {
+            "5.x-dev": "5.0.x-dev"
         }
     },
     "minimum-stability": "dev",
