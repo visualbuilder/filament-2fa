@@ -20,6 +20,9 @@ use Orchestra\Testbench\TestCase as Orchestra;
 use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
 use Visualbuilder\Filament2fa\Filament2faServiceProvider;
 use Visualbuilder\Filament2fa\Tests\Models\User;
+use Livewire\Mechanisms\DataStore;
+use Illuminate\Support\ViewErrorBag;
+use Illuminate\Support\Facades\View;
 
 class TestCase extends Orchestra
 {
@@ -30,6 +33,10 @@ class TestCase extends Orchestra
     protected function setUp(): void
     {
         parent::setUp();
+
+        View::share('errors', new ViewErrorBag);
+        $dataStore = app(DataStore::class);
+        app()->instance(DataStore::class, $dataStore);
     }
 
     protected function getPackageProviders($app)
