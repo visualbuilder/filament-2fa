@@ -3,6 +3,7 @@
 namespace Visualbuilder\Filament2fa\Tests;
 
 use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\MenuItem;
 use Filament\Panel;
@@ -17,6 +18,7 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Visualbuilder\Filament2fa\Filament\Pages\Configure;
 use Visualbuilder\Filament2fa\Filament\Resources\BannerResource;
+use Visualbuilder\Filament2fa\TwoFactorPlugin;
 
 class UserPanelProvider extends PanelProvider
 {
@@ -25,6 +27,7 @@ class UserPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('user')
+            ->plugins([TwoFactorPlugin::make()])
             ->login()
             ->colors([
                 'primary' => Color::Amber,
@@ -50,6 +53,7 @@ class UserPanelProvider extends PanelProvider
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
                 SubstituteBindings::class,
+                DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
             ->authMiddleware([

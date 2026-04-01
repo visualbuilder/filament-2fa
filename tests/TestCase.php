@@ -9,6 +9,7 @@ use Filament\FilamentServiceProvider;
 use Filament\Forms\FormsServiceProvider;
 use Filament\Infolists\InfolistsServiceProvider;
 use Filament\Notifications\NotificationsServiceProvider;
+use Filament\Schemas\SchemasServiceProvider;
 use Filament\Support\SupportServiceProvider;
 use Filament\Tables\TablesServiceProvider;
 use Filament\Widgets\WidgetsServiceProvider;
@@ -20,6 +21,7 @@ use Orchestra\Testbench\TestCase as Orchestra;
 use RyanChandler\BladeCaptureDirective\BladeCaptureDirectiveServiceProvider;
 use Visualbuilder\Filament2fa\Filament2faServiceProvider;
 use Visualbuilder\Filament2fa\Tests\Models\User;
+use Filament\Facades\Filament;
 use Livewire\Mechanisms\DataStore;
 use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Facades\View;
@@ -37,6 +39,9 @@ class TestCase extends Orchestra
         View::share('errors', new ViewErrorBag);
         $dataStore = app(DataStore::class);
         app()->instance(DataStore::class, $dataStore);
+
+        // Boot the Filament panel for direct Livewire component testing
+        Filament::setCurrentPanel(Filament::getPanel('user'));
     }
 
     protected function getPackageProviders($app)
@@ -51,6 +56,7 @@ class TestCase extends Orchestra
             InfolistsServiceProvider::class,
             LivewireServiceProvider::class,
             NotificationsServiceProvider::class,
+            SchemasServiceProvider::class,
             SupportServiceProvider::class,
             TablesServiceProvider::class,
             WidgetsServiceProvider::class,

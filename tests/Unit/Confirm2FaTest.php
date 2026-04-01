@@ -4,7 +4,7 @@ use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Crypt;
 use Laragear\TwoFactor\Models\TwoFactorAuthentication;
 use Visualbuilder\Filament2fa\Filament\Pages\Login;
-use Visualbuilder\Filament2fa\Livewire\Confirm2Fa;
+use Visualbuilder\Filament2fa\Filament\Pages\Confirm2Fa;
 
 use function Pest\Livewire\livewire;
 

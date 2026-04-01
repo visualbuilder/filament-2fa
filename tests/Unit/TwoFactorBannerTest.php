@@ -32,7 +32,7 @@ it('can access create banner page', function () {
 });
 
 it('can create banner', function () {
-
+    $this->actingAs($this->createUser());
     $banner = Banner::factory()->make();
 
     $storedData = livewire(CreateBanner::class)
@@ -67,6 +67,7 @@ it('can create banner', function () {
 });
 
 it('can validate create banner form', function () {
+    $this->actingAs($this->createUser());
     livewire(CreateBanner::class)
         ->fillForm([])
         ->call('create')
@@ -87,6 +88,7 @@ it('can access edit banner page', function () {
 });
 
 it('can update banner', function () {
+    $this->actingAs($this->createUser());
     $bannerNew = Banner::factory()->create();
     $banner = Banner::factory()->make();
 
@@ -122,6 +124,7 @@ it('can update banner', function () {
 });
 
 it('can delete banner', function () {
+    $this->actingAs($this->createUser());
     $banner = Banner::factory()->create();
 
     livewire(EditBanner::class, [
@@ -132,6 +135,7 @@ it('can delete banner', function () {
 });
 
 it('can delete multiple banners', function () {
+    $this->actingAs($this->createUser());
     $banners = Banner::factory()->count(4)->create();
 
     livewire(ListBanners::class)
@@ -143,6 +147,7 @@ it('can delete multiple banners', function () {
 });
 
 it('can disable multiple banners', function () {
+    $this->actingAs($this->createUser());
     $banners = Banner::factory()->count(4)->create();
 
     livewire(ListBanners::class)
@@ -157,6 +162,7 @@ it('can disable multiple banners', function () {
 });
 
 it('can enable multiple banners', function () {
+    $this->actingAs($this->createUser());
     $banners = Banner::factory()->count(4)->create();
 
     livewire(ListBanners::class)
