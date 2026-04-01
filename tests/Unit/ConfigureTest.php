@@ -7,19 +7,18 @@ use function Pest\Livewire\livewire;
 it('can access configure page by user', function () {
     $this->actingAs(
         $this->createUser()
-    )->get(Configure::getUrl())->assertSuccessful();
+    )->get('/two-factor-authentication')->assertSuccessful();
 });
 
 it('can see 2fa confirm code & validation', function () {
     $user = $this->createUser();
     $this->actingAs($user);
     livewire(Configure::class)
-        ->refresh()
         ->assertFormExists()
-        ->assertFormFieldExists('twoFactorAuth.2fa_code')
-        ->fillForm(['twoFactorAuth.2fa_code' => mt_rand(100000, 999999)])
-        ->call('save')
-        ->assertHasFormErrors(['twoFactorAuth.2fa_code']);
+        ->assertFormFieldExists('two_factor_code')
+        ->fillForm(['two_factor_code' => '000000'])
+        ->call('confirmTwoFactorFromForm')
+        ->assertNotified('Invalid code');
 });
 
 it('can enable two factor authentication', function () {
@@ -38,12 +37,12 @@ it('can disable two factor authentication', function () {
         TwoFactorAuthentication::factory()->make()
     );
     expect($user->hasTwoFactorEnabled())->toBeTrue();
+
+    // Disable by calling the method directly (action is inside schema content)
     livewire(Configure::class)
-        ->refresh()
-        ->assertFormExists()
-        ->fillForm([
-            'disable_two_factor_auth' => true
-        ])
-        ->call('save');
-    expect(!$user->hasTwoFactorEnabled())->toBeTrue();
+        ->call('disable2fa');
+
+    $user->refresh();
+    $user->load('twoFactorAuth');
+    expect($user->hasTwoFactorEnabled())->toBeFalse();
 });

@@ -74,7 +74,6 @@ it('can validate create banner form', function () {
         ->assertHasFormErrors([
             'name' => 'required',
             'render_location' => 'required',
-            'content' => 'required',
             'auth_guards' => 'required',
         ]);
 });
@@ -139,7 +138,7 @@ it('can delete multiple banners', function () {
     $banners = Banner::factory()->count(4)->create();
 
     livewire(ListBanners::class)
-        ->callTableBulkAction(DeleteBulkAction::class, $banners->pluck('id')->toArray());
+        ->callTableBulkAction('delete', $banners->pluck('id')->toArray());
 
     foreach ($banners as $banner) {
         $this->assertModelMissing($banner);

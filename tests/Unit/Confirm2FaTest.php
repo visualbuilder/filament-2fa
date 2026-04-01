@@ -57,20 +57,18 @@ it('Confirm 2FA TOTP code check validation errors', function () {
     $credentials = session("$sessionKey.credentials", []);
     expect(Crypt::decryptString($credentials['email']))->toEqual($loginEmail);
 
+    // Empty code should fail validation
     livewire(Confirm2Fa::class)
-        ->assertFormExists()
-        ->fillForm()
+        ->fillForm(['totp_code' => ''])
         ->call('submit')
-        ->assertHasErrors(['totp_code']);
+        ->assertHasFormErrors(['totp_code' => 'required']);
 
+    // Invalid code should not authenticate the user
     livewire(Confirm2Fa::class)
-        ->assertFormExists()
-        ->fillForm([
-            'totp_code' => '12345126'
-        ])
+        ->fillForm(['totp_code' => '123456'])
         ->call('submit')
-        ->assertHasErrors(['totp_code']);
-    expect(!auth()->check())->toBeTrue();
+        ->assertNotified('Invalid Code');
+    expect(auth()->check())->toBeFalse();
 });
 
 it('Confirm 2FA TOTP code', function () {
