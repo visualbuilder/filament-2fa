@@ -23,6 +23,7 @@ return new class() extends Migration
             $table->boolean('can_truncate_message')->default(false);
             $table->boolean('is_active')->default(true);
             $table->boolean('is_2fa_setup')->default(true);
+            $table->boolean('show_to_guests')->default(false);
             $table->dateTime('active_since')->nullable();
             $table->string('text_color');
             $table->string('icon')->nullable();

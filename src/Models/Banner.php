@@ -25,6 +25,7 @@ class Banner extends Model
         'can_truncate_message',
         'is_active',
         'is_2fa_setup',
+        'show_to_guests',
         'active_since',
         'text_color',
         'icon',
@@ -39,6 +40,7 @@ class Banner extends Model
     protected $casts = [
         'is_active' => 'boolean',
         'is_2fa_setup' => 'boolean',
+        'show_to_guests' => 'boolean',
         'can_be_closed_by_user' => 'boolean',
         'can_truncate_message' => 'boolean',
         'scope' => 'array',

@@ -131,6 +131,9 @@ class BannerResource extends Resource
                                             Checkbox::make('is_2fa_setup')
                                                 ->label('Show when 2fa is optional and not setup yet')
                                                 ->columnSpan('full'),
+                                            Checkbox::make('show_to_guests')
+                                                ->label('Show on login pages to signed-out visitors')
+                                                ->columnSpan('full'),
                                             Checkbox::make('can_be_closed_by_user')
                                                 ->label('User can dismiss banner')
                                                 ->columnSpan('full'),

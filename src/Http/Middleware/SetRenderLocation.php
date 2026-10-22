@@ -43,7 +43,7 @@ class SetRenderLocation
             return $banner->isVisible()
                 && $banner->isApplicableForUser($user)
                 && $banner->checkGuard()
-                && $this->checkCurrentAuth()
+                && $this->checkCurrentAuth($banner)
                 && (!$banner->is_2fa_setup || $is2FAEnabledForGuard);
         });
     }
@@ -55,12 +55,16 @@ class SetRenderLocation
         return Arr::has($authGuards, $currentGuard) && $authGuards[$currentGuard]['enabled'];
     }
 
-    private function checkCurrentAuth()
+    private function checkCurrentAuth(Banner $banner)
     {
         $authGuards = config('filament-2fa.banner.auth_guards');
-        return Filament::auth()->user() &&
-            Arr::has($authGuards, Filament::getAuthGuard()) &&
+        $canSeeBanner = Arr::has($authGuards, Filament::getAuthGuard()) &&
             $authGuards[Filament::getAuthGuard()]['can_see_banner'];
+
+        // Signed-out visitors (e.g. on the login page) only see banners opted in with show_to_guests
+        $isSignedInOrGuestBanner = Filament::auth()->user() || ($banner->show_to_guests && !$banner->is_2fa_setup);
+
+        return $canSeeBanner && $isSignedInOrGuestBanner;
     }
 
     private function checkRoutes($request)

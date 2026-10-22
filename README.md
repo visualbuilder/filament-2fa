@@ -220,6 +220,16 @@ The **SetRenderLocation** middleware will display a notification banner on a pag
 ### 2FA Notification Banner
 In the configuration, if the auth guard is enabled to manage the banner, the user can create, edit, delete, and enable/disable the banner. 
 
+#### Banners on login pages
+Banners only show to signed-in users by default. Tick **Show on login pages to signed-out visitors** on a banner to show it to guests too, for example a maintenance notice on the login page. Use the `BODY_START` or `AUTH_LOGIN_FORM_BEFORE` render location. The banner still only shows on panels whose guard it targets, and 2FA setup banners are never shown to guests.
+
+Upgrading from an earlier 5.x release: publish and run the new `add_show_to_guests_to_two_factor_banners_table` migration.
+
+```bash
+php artisan vendor:publish --tag="filament-2fa-migrations"
+php artisan migrate
+```
+
 ## Testing
 
 ```bash
