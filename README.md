@@ -14,7 +14,7 @@ Requires an app like Authy or Google Authenticator to generate Time-based One Ti
 
 | Package Version | Filament | Laravel | PHP |
 |-----------------|----------|---------|-----|
-| 5.x | 5.x | 11.x, 12.x | 8.2+ |
+| 5.x | 5.x | 11.x, 12.x, 13.x | 8.2+ (8.3+ on Laravel 13) |
 | 4.x | 4.x | 10.x, 11.x | 8.2+ |
 
 ## Installation

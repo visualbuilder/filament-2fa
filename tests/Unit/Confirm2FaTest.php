@@ -152,3 +152,53 @@ it('remembers the device when toggle is on', function () {
     $user->refresh();
     expect($user->twoFactorAuth->safe_devices)->not()->toBeEmpty();
 });
+
+it('signs in with a recovery code and marks the code as used', function () {
+    $user = $this->createUser();
+    $twoFactor = TwoFactorAuthentication::factory()->withRecovery()->make();
+    $code = $twoFactor->recovery_codes->first()['code'];
+    $user->twoFactorAuth()->save($twoFactor);
+
+    livewire(Login::class)
+        ->fillForm([
+            'email' => 'admin@domain.com',
+            'password' => 'password',
+        ])
+        ->call('authenticate')
+        ->assertRedirect(config('filament-2fa.login.confirm_totp_page_url'));
+
+    livewire(Confirm2Fa::class)
+        ->fillForm(['totp_code' => $code])
+        ->call('submit')
+        ->assertHasNoFormErrors()
+        ->assertNotified('Success');
+
+    expect(auth()->user()?->email)->toBe('admin@domain.com');
+
+    $used = $user->refresh()->twoFactorAuth->recovery_codes->firstWhere('code', $code);
+    expect($used['used_at'])->not->toBeNull();
+    expect($user->twoFactorAuth->recovery_codes->whereNull('used_at'))->toHaveCount(9);
+});
+
+it('rejects a recovery code that was already used', function () {
+    $user = $this->createUser();
+    $twoFactor = TwoFactorAuthentication::factory()->withRecovery()->make();
+    $code = $twoFactor->recovery_codes->first()['code'];
+    $twoFactor->setRecoveryCodeAsUsed($code);
+    $user->twoFactorAuth()->save($twoFactor);
+
+    livewire(Login::class)
+        ->fillForm([
+            'email' => 'admin@domain.com',
+            'password' => 'password',
+        ])
+        ->call('authenticate')
+        ->assertRedirect(config('filament-2fa.login.confirm_totp_page_url'));
+
+    livewire(Confirm2Fa::class)
+        ->fillForm(['totp_code' => $code])
+        ->call('submit')
+        ->assertNotified('Invalid Code');
+
+    expect(auth()->check())->toBeFalse();
+});
