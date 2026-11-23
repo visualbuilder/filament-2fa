@@ -72,10 +72,9 @@ class TestCase extends Orchestra
 
     protected function defineDatabaseMigrations(): void
     {
-        // Run migrations here (not in getEnvironmentSetUp) so the Eloquent
-        // connection resolver is bound. laragear/two-factor v3 resolves the
-        // schema builder through the model's connection, which is unavailable
-        // during environment setup.
+        // Run migrations here (not in getEnvironmentSetUp) so the database
+        // connection is bound before the laragear/two-factor migration
+        // resolves its schema builder.
         $userMigration = include __DIR__.'/database/migrations/create_users_table.php';
         $userMigration->up();
 

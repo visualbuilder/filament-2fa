@@ -12,9 +12,15 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [8.3,8.4]
-        laravel: [11.*, 12.*]
+        php: [8.3,8.4,8.5]
+        laravel: [11.*, 12.*, 13.*]
+        laragear: ['^3.0', '^4.0']
         stability: [prefer-stable]
+        exclude:
+          - laravel: 11.*
+            laragear: '^4.0'
+          - laravel: 13.*
+            laragear: '^3.0'
         include:
           - laravel: 11.*
             testbench: 9.*
@@ -22,8 +28,11 @@ jobs:
           - laravel: 12.*
             testbench: 10.*
             filament: 5.*
+          - laravel: 13.*
+            testbench: 11.*
+            filament: 5.*
 
-    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }}
+    name: P${{ matrix.php }} - L${{ matrix.laravel }} - laragear ${{ matrix.laragear }} - ${{ matrix.stability }}
 
     steps:
       - name: Checkout code
@@ -43,7 +52,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" "filament/filament:${{ matrix.filament }}" --no-interaction --no-update
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" "filament/filament:${{ matrix.filament }}" "laragear/two-factor:${{ matrix.laragear }}" --no-interaction --no-update
           composer update --${{ matrix.stability }} --prefer-dist --no-interaction
 
       - name: List Installed Dependencies
