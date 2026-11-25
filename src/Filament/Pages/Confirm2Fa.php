@@ -1,6 +1,8 @@
 <?php
 namespace Visualbuilder\Filament2fa\Filament\Pages;
 
+use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
+use DanHarrin\LivewireRateLimiting\WithRateLimiting;
 use Exception;
 use Filament\Facades\Filament;
 
@@ -20,6 +22,7 @@ use Filament\Schemas\Components\Group;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Visualbuilder\Filament2fa\FilamentTwoFactor;
 
@@ -27,6 +30,12 @@ class Confirm2Fa extends SimplePage
 {
     use InteractsWithForms, InteractsWithFormActions;
     use HasRoutes;
+    use WithRateLimiting;
+
+    /** Code attempts allowed per IP and per user within the decay window */
+    protected int $maxCodeAttempts = 5;
+
+    protected int $codeAttemptDecaySeconds = 60;
 
     public static ?string $title = 'Confirm your 2FA code';
 
@@ -125,6 +134,19 @@ class Confirm2Fa extends SimplePage
                 return;
             }
 
+            // Limit code guesses per IP and per user BEFORE validating the code
+            try {
+                $this->rateLimit($this->maxCodeAttempts, $this->codeAttemptDecaySeconds);
+                $this->rateLimitUser($user);
+            } catch (TooManyRequestsException $exception) {
+                $this->getRateLimitedNotification($exception)?->send();
+                $this->addError('totp_code', __('auth.throttle', [
+                    'seconds' => $exception->secondsUntilAvailable,
+                    'minutes' => $exception->minutesUntilAvailable,
+                ]));
+                return;
+            }
+
             $state = $this->form->getState();
             $code = (string) ($state['totp_code'] ?? '');
             $this->processingCode = $code;
@@ -146,6 +168,8 @@ class Confirm2Fa extends SimplePage
             ])->validate($user);
 
             if ($twoFactorValid) {
+                RateLimiter::clear($this->getUserRateLimitKey($user));
+
                 // Only authenticate AFTER successful TOTP validation
                 $this->authenticate($user);
 
@@ -201,6 +225,41 @@ class Confirm2Fa extends SimplePage
         }
     }
 
+
+    /**
+     * Per-user limit, so restarting the login from a new IP or session does not reset it.
+     *
+     * @throws TooManyRequestsException
+     */
+    protected function rateLimitUser(Model $user): void
+    {
+        $key = $this->getUserRateLimitKey($user);
+
+        if (RateLimiter::tooManyAttempts($key, $this->maxCodeAttempts)) {
+            throw new TooManyRequestsException(static::class, 'submit', request()->ip(), RateLimiter::availableIn($key));
+        }
+
+        RateLimiter::hit($key, $this->codeAttemptDecaySeconds);
+    }
+
+    protected function getUserRateLimitKey(Model $user): string
+    {
+        return 'filament-2fa-confirm:'.sha1($user::class.'|'.$user->getKey());
+    }
+
+    protected function getRateLimitedNotification(TooManyRequestsException $exception): ?Notification
+    {
+        return Notification::make()
+            ->title(__('filament-panels::auth/pages/login.notifications.throttled.title', [
+                'seconds' => $exception->secondsUntilAvailable,
+                'minutes' => $exception->minutesUntilAvailable,
+            ]))
+            ->body(array_key_exists('body', __('filament-panels::auth/pages/login.notifications.throttled') ?: []) ? __('filament-panels::auth/pages/login.notifications.throttled.body', [
+                'seconds' => $exception->secondsUntilAvailable,
+                'minutes' => $exception->minutesUntilAvailable,
+            ]) : null)
+            ->danger();
+    }
 
     /**
      * Get the user from session credentials WITHOUT logging them in.

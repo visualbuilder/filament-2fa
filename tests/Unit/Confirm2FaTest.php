@@ -2,6 +2,7 @@
 
 use Filament\Facades\Filament;
 use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\RateLimiter;
 use Laragear\TwoFactor\Models\TwoFactorAuthentication;
 use Visualbuilder\Filament2fa\Filament\Pages\Login;
 use Visualbuilder\Filament2fa\Filament\Pages\Confirm2Fa;
@@ -201,4 +202,112 @@ it('rejects a recovery code that was already used', function () {
         ->assertNotified('Invalid Code');
 
     expect(auth()->check())->toBeFalse();
+});
+
+function startTwoFactorLogin(): void
+{
+    livewire(Login::class)
+        ->fillForm([
+            'email' => 'admin@domain.com',
+            'password' => 'password',
+        ])
+        ->call('authenticate')
+        ->assertRedirect(config('filament-2fa.login.confirm_totp_page_url'));
+}
+
+function submitWrongCodes(int $times): void
+{
+    foreach (range(1, $times) as $attempt) {
+        livewire(Confirm2Fa::class)
+            ->fillForm(['totp_code' => '000000'])
+            ->call('submit')
+            ->assertHasNoErrors(['totp_code'])
+            ->assertNotified('Invalid Code');
+    }
+}
+
+function userRateLimitKey($user): string
+{
+    return 'filament-2fa-confirm:'.sha1($user::class.'|'.$user->getKey());
+}
+
+function ipRateLimitKey(): string
+{
+    return 'livewire-rate-limiter:'.sha1(Confirm2Fa::class.'|submit|'.request()->ip());
+}
+
+it('refuses the sixth code within a minute without checking it', function () {
+    $this->freezeTime();
+    $user = $this->createUser();
+    $user->twoFactorAuth()->save(TwoFactorAuthentication::factory()->make());
+
+    startTwoFactorLogin();
+    submitWrongCodes(5);
+
+    livewire(Confirm2Fa::class)
+        ->fillForm(['totp_code' => $user->makeTwoFactorCode()])
+        ->call('submit')
+        ->assertHasErrors(['totp_code'])
+        ->assertSee(__('auth.throttle', ['seconds' => 60]))
+        ->assertNotNotified('Success');
+
+    expect(auth()->check())->toBeFalse();
+});
+
+it('keeps the per user limit when the login is started again', function () {
+    $user = $this->createUser();
+    $user->twoFactorAuth()->save(TwoFactorAuthentication::factory()->make());
+
+    startTwoFactorLogin();
+    submitWrongCodes(5);
+
+    // A new IP would have a fresh per IP counter, and a new login gives a fresh session
+    expect(RateLimiter::attempts(ipRateLimitKey()))->toBe(5);
+    RateLimiter::clear(ipRateLimitKey());
+    startTwoFactorLogin();
+
+    livewire(Confirm2Fa::class)
+        ->fillForm(['totp_code' => $user->makeTwoFactorCode()])
+        ->call('submit')
+        ->assertHasErrors(['totp_code']);
+
+    expect(auth()->check())->toBeFalse();
+    expect(RateLimiter::tooManyAttempts(userRateLimitKey($user), 5))->toBeTrue();
+});
+
+it('allows codes again after the limit window passes', function () {
+    $user = $this->createUser();
+    $user->twoFactorAuth()->save(TwoFactorAuthentication::factory()->make());
+
+    startTwoFactorLogin();
+    submitWrongCodes(5);
+
+    $this->travel(61)->seconds();
+
+    livewire(Confirm2Fa::class)
+        ->fillForm(['totp_code' => $user->makeTwoFactorCode()])
+        ->call('submit')
+        ->assertHasNoErrors(['totp_code'])
+        ->assertNotified('Success');
+
+    expect(auth()->user()?->email)->toBe('admin@domain.com');
+});
+
+it('logs in with a correct code under the limit and clears the per user counter', function () {
+    $user = $this->createUser();
+    $user->twoFactorAuth()->save(TwoFactorAuthentication::factory()->make());
+
+    startTwoFactorLogin();
+    submitWrongCodes(2);
+
+    expect(RateLimiter::attempts(userRateLimitKey($user)))->toBe(2);
+
+    livewire(Confirm2Fa::class)
+        ->fillForm(['totp_code' => $user->makeTwoFactorCode()])
+        ->call('submit')
+        ->assertHasNoErrors(['totp_code'])
+        ->assertNotified('Success');
+
+    expect(auth()->user()?->email)->toBe('admin@domain.com');
+    expect(RateLimiter::attempts(userRateLimitKey($user)))->toBe(0);
 });
