@@ -2,6 +2,11 @@
 
 All notable changes to `Filament-2fa` will be documented in this file.
 
+## 5.0.7 - 2026-11-25 Rate limit the 2FA confirm step
+
+- Rate limit `Confirm2Fa::submit()` before the code is checked: 5 tries a minute per IP (as on the Login page) and 5 tries a minute per user being confirmed. The per user count survives a restarted login and is cleared by a correct code
+- When limited, the code is not checked and the user sees the same throttle message and notification as the Login page
+
 ## 5.0.6 - 2026-11-23 Laravel 13 support
 
 - Allow `laragear/two-factor` `^4.0` alongside `^2.0` and `^3.0`, enabling installation on Laravel 13 (laragear `^4.0` supports Laravel 12 and 13 and requires PHP 8.3)
